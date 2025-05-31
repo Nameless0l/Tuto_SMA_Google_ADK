@@ -1,0 +1,560 @@
+\subsection{Annexe A : Glossaire des termes SMA}
+
+\begin{description}
+    \item[Agent] Entité autonome capable de percevoir son environnement et d'agir de manière indépendante pour atteindre ses objectifs.
+
+    \item[Autonomie] Capacité d'un agent à prendre des décisions et à agir sans intervention externe directe.
+
+    \item[Comportement (Behavior)] Ensemble d'actions et de réactions d'un agent face aux stimuli de son environnement.
+
+    \item[Communication inter-agents] Mécanisme permettant aux agents d'échanger des informations et de coordonner leurs actions.
+
+    \item[Coordination] Processus par lequel les agents synchronisent leurs actions pour atteindre un objectif commun.
+
+    \item[Émergence] Phénomène par lequel des propriétés complexes apparaissent au niveau système à partir d'interactions simples entre agents.
+
+    \item[Environnement] Contexte dans lequel évoluent les agents, incluant les ressources et les contraintes.
+
+    \item[LLM (Large Language Model)] Modèle d'intelligence artificielle capable de comprendre et générer du langage naturel.
+
+    \item[Multi-agent] Système composé de plusieurs agents interagissant dans un environnement partagé.
+
+    \item[Ontologie] Représentation formelle des connaissances d'un domaine spécifique.
+
+    \item[Performative] Type d'acte de communication dans le langage ACL (ex: INFORM, REQUEST, PROPOSE).
+
+    \item[Pro-activité] Capacité d'un agent à prendre des initiatives et à anticiper les besoins.
+
+    \item[Réactivité] Capacité d'un agent à répondre rapidement aux changements de son environnement.
+
+    \item[Socialité] Capacité d'un agent à interagir et collaborer avec d'autres agents.
+
+    \item[Système expert] Système d'intelligence artificielle simulant le raisonnement d'un expert humain dans un domaine spécifique.
+\end{description}
+
+\subsection{Annexe B : Code source complet des exemples}
+
+\subsubsection{Structure du projet}
+\begin{verbatim}
+agriculture_cameroun/
+├── src/
+│   ├── agents/
+│   │   ├── __init__.py
+│   │   ├── agent_principal.py
+│   │   ├── agent_meteo.py
+│   │   ├── agent_cultures.py
+│   │   ├── agent_sante_plantes.py
+│   │   ├── agent_economique.py
+│   │   └── agent_ressources.py
+│   ├── tools/
+│   │   ├── __init__.py
+│   │   ├── weather_api.py
+│   │   ├── plant_diagnosis.py
+│   │   └── market_analysis.py
+│   ├── config/
+│   │   ├── __init__.py
+│   │   ├── settings.py
+│   │   └── ontology.py
+│   └── main.py
+├── tests/
+│   ├── test_agents.py
+│   └── test_integration.py
+├── docs/
+├── requirements.txt
+├── pyproject.toml
+└── README.md
+\end{verbatim}
+
+\subsubsection{Agent Principal - Code complet}
+\begin{verbatim}
+# src/agents/agent_principal.py
+import asyncio
+from typing import Dict, List, Any
+from google_adk import Agent, tool, Context
+
+class AgentPrincipal(Agent):
+    """Agent coordinateur principal du système Agriculture Cameroun"""
+
+    def __init__(self):
+        super().__init__(
+            name="CoordinateurAgricole",
+            instructions="""
+            Vous êtes le coordinateur principal d'un système d'aide
+            aux agriculteurs camerounais. Votre rôle est de :
+            1. Analyser les demandes des utilisateurs
+            2. Router vers les agents spécialisés appropriés
+            3. Synthétiser les réponses des sous-agents
+            4. Fournir des recommandations cohérentes
+            """,
+            tools=[self.router_query, self.synthesize_responses]
+        )
+        self.sub_agents = {
+            'meteo': AgentMeteo(),
+            'cultures': AgentCultures(),
+            'sante': AgentSantePlantes(),
+            'economique': AgentEconomique(),
+            'ressources': AgentRessources()
+        }
+
+    @tool
+    async def router_query(self, query: str, context: Context) -> Dict[str, Any]:
+        """Route la requête vers les agents appropriés"""
+
+        # Analyse de la requête pour déterminer les agents concernés
+        relevant_agents = self._analyze_query(query)
+
+        results = {}
+
+        # Envoi de la requête aux agents concernés
+        for agent_name in relevant_agents:
+            if agent_name in self.sub_agents:
+                agent_response = await self.sub_agents[agent_name].process(
+                    query, context
+                )
+                results[agent_name] = agent_response
+
+        return results
+
+    @tool
+    async def synthesize_responses(
+        self,
+        agent_responses: Dict[str, Any],
+        original_query: str
+    ) -> str:
+        """Synthétise les réponses des agents spécialisés"""
+
+        synthesis = f"Réponse à votre demande : {original_query}\n\n"
+
+        for agent_name, response in agent_responses.items():
+            synthesis += f"**{agent_name.capitalize()}** :\n"
+            synthesis += f"{response}\n\n"
+
+        # Ajout de recommandations globales
+        synthesis += self._generate_global_recommendations(agent_responses)
+
+        return synthesis
+
+    def _analyze_query(self, query: str) -> List[str]:
+        """Analyse la requête pour identifier les agents concernés"""
+        query_lower = query.lower()
+        relevant_agents = []
+
+        # Mots-clés pour chaque domaine
+        keywords = {
+            'meteo': ['météo', 'pluie', 'température', 'climat', 'saison'],
+            'cultures': ['culture', 'plantation', 'variété', 'semis', 'récolte'],
+            'sante': ['maladie', 'parasite', 'traitement', 'pesticide', 'fongicide'],
+            'economique': ['prix', 'marché', 'vente', 'profit', 'coût'],
+            'ressources': ['eau', 'irrigation', 'engrais', 'sol', 'fertilisant']
+        }
+
+        for agent, agent_keywords in keywords.items():
+            if any(keyword in query_lower for keyword in agent_keywords):
+                relevant_agents.append(agent)
+
+        # Si aucun agent spécifique n'est identifié, consulter tous
+        if not relevant_agents:
+            relevant_agents = list(self.sub_agents.keys())
+
+        return relevant_agents
+
+    def _generate_global_recommendations(
+        self,
+        agent_responses: Dict[str, Any]
+    ) -> str:
+        """Génère des recommandations globales basées sur toutes les réponses"""
+
+        recommendations = "**Recommandations générales** :\n"
+
+        # Logique de synthèse intelligente
+        if 'meteo' in agent_responses and 'cultures' in agent_responses:
+            recommendations += "• Adaptez vos pratiques culturales aux prévisions météorologiques\n"
+
+        if 'sante' in agent_responses and 'ressources' in agent_responses:
+            recommendations += "• Coordonnez les traitements phytosanitaires avec la gestion de l'irrigation\n"
+
+        if 'economique' in agent_responses:
+            recommendations += "• Prenez en compte l'analyse économique pour optimiser votre rentabilité\n"
+
+        recommendations += "• Consultez régulièrement le système pour des mises à jour\n"
+
+        return recommendations
+
+# Exemple d'utilisation
+async def main():
+    agent = AgentPrincipal()
+
+    # Simulation d'une requête d'agriculteur
+    requete = "Quand planter le maïs cette saison ? Il y a des taches sur mes feuilles de tomates."
+
+    response = await agent.process(requete)
+    print(response)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+\end{verbatim}
+
+\subsubsection{Configuration et outils - Code complet}
+\begin{verbatim}
+# src/config/settings.py
+import os
+from typing import Dict, Any
+
+class Settings:
+    """Configuration globale du système"""
+
+    # API Keys
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+
+    # Configuration des agents
+    AGENT_CONFIG = {
+        "model": "gemini-pro",
+        "temperature": 0.7,
+        "max_tokens": 1000
+    }
+
+    # Configuration météo
+    WEATHER_CONFIG = {
+        "default_location": "Yaoundé, CM",
+        "forecast_days": 7,
+        "update_interval": 3600  # 1 heure
+    }
+
+    # Configuration base de connaissances
+    KNOWLEDGE_BASE = {
+        "crops_db": "data/crops_cameroon.json",
+        "diseases_db": "data/plant_diseases.json",
+        "markets_db": "data/market_prices.json"
+    }
+
+    # Configuration logging
+    LOGGING_CONFIG = {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "file": "logs/agriculture_sma.log"
+    }
+
+# src/tools/weather_api.py
+import aiohttp
+import asyncio
+from typing import Dict, Any, Optional
+from config.settings import Settings
+
+class WeatherAPI:
+    """Interface pour l'API météorologique"""
+
+    def __init__(self):
+        self.api_key = Settings.OPENWEATHER_API_KEY
+        self.base_url = "http://api.openweathermap.org/data/2.5"
+
+    async def get_current_weather(self, location: str) -> Dict[str, Any]:
+        """Récupère les conditions météorologiques actuelles"""
+
+        url = f"{self.base_url}/weather"
+        params = {
+            "q": location,
+            "appid": self.api_key,
+            "units": "metric",
+            "lang": "fr"
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return {
+                        "temperature": data["main"]["temp"],
+                        "humidity": data["main"]["humidity"],
+                        "description": data["weather"][0]["description"],
+                        "wind_speed": data["wind"]["speed"],
+                        "pressure": data["main"]["pressure"]
+                    }
+                else:
+                    raise Exception(f"Erreur API météo: {response.status}")
+
+    async def get_forecast(self, location: str, days: int = 5) -> List[Dict[str, Any]]:
+        """Récupère les prévisions météorologiques"""
+
+        url = f"{self.base_url}/forecast"
+        params = {
+            "q": location,
+            "appid": self.api_key,
+            "units": "metric",
+            "lang": "fr",
+            "cnt": days * 8  # 8 prévisions par jour (toutes les 3h)
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    forecasts = []
+
+                    for item in data["list"]:
+                        forecasts.append({
+                            "datetime": item["dt_txt"],
+                            "temperature": item["main"]["temp"],
+                            "humidity": item["main"]["humidity"],
+                            "description": item["weather"][0]["description"],
+                            "precipitation": item.get("rain", {}).get("3h", 0)
+                        })
+
+                    return forecasts
+                else:
+                    raise Exception(f"Erreur API prévisions: {response.status}")
+
+# src/tools/plant_diagnosis.py
+import json
+from typing import Dict, List, Any, Optional
+from config.settings import Settings
+
+class PlantDiagnosisEngine:
+    """Moteur de diagnostic des maladies des plantes"""
+
+    def __init__(self):
+        self.diseases_db = self._load_diseases_database()
+        self.symptoms_keywords = self._build_symptoms_index()
+
+    def _load_diseases_database(self) -> Dict[str, Any]:
+        """Charge la base de données des maladies"""
+
+        try:
+            with open(Settings.KNOWLEDGE_BASE["diseases_db"], 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            # Base de données par défaut
+            return {
+                "mildiou_tomate": {
+                    "nom": "Mildiou de la tomate",
+                    "symptomes": ["taches brunes", "feuilles jaunes", "pourriture fruits"],
+                    "causes": ["humidité élevée", "température fraîche"],
+                    "traitements": ["bouillie bordelaise", "aération", "espacement plants"],
+                    "prevention": ["rotation cultures", "drainage", "traitement préventif"]
+                },
+                "fusariose": {
+                    "nom": "Fusariose",
+                    "symptomes": ["flétrissement", "jaunissement", "brunissement racines"],
+                    "causes": ["champignon sol", "stress hydrique"],
+                    "traitements": ["fongicide systémique", "amélioration drainage"],
+                    "prevention": ["semences saines", "désinfection sol"]
+                }
+            }
+
+    def _build_symptoms_index(self) -> Dict[str, List[str]]:
+        """Construit un index des symptômes pour la recherche"""
+
+        index = {}
+        for disease_id, disease_info in self.diseases_db.items():
+            for symptom in disease_info["symptomes"]:
+                words = symptom.lower().split()
+                for word in words:
+                    if word not in index:
+                        index[word] = []
+                    if disease_id not in index[word]:
+                        index[word].append(disease_id)
+
+        return index
+
+    def diagnose(self, symptoms_description: str) -> List[Dict[str, Any]]:
+        """Diagnostique les maladies potentielles"""
+
+        words = symptoms_description.lower().split()
+        potential_diseases = {}
+
+        # Recherche des maladies correspondantes
+        for word in words:
+            if word in self.symptoms_keywords:
+                for disease_id in self.symptoms_keywords[word]:
+                    if disease_id not in potential_diseases:
+                        potential_diseases[disease_id] = 0
+                    potential_diseases[disease_id] += 1
+
+        # Tri par score de correspondance
+        sorted_diseases = sorted(
+            potential_diseases.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        # Formatage des résultats
+        results = []
+        for disease_id, score in sorted_diseases[:3]:  # Top 3
+            disease_info = self.diseases_db[disease_id]
+            results.append({
+                "nom": disease_info["nom"],
+                "probabilite": min(score * 0.3, 1.0),  # Score normalisé
+                "symptomes": disease_info["symptomes"],
+                "traitements": disease_info["traitements"],
+                "prevention": disease_info["prevention"]
+            })
+
+        return results
+\end{verbatim}
+
+\subsection{Annexe C : Commandes utiles et dépannage}
+
+\subsubsection{Installation et configuration}
+\begin{verbatim}
+# Installation de Python 3.12+
+sudo apt update
+sudo apt install python3.12 python3.12-pip
+
+# Vérification de la version
+python3.12 --version
+
+# Installation de Poetry
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Configuration du projet
+poetry new agriculture_cameroun
+cd agriculture_cameroun
+poetry add google-adk aiohttp fastapi uvicorn
+
+# Variables d'environnement
+export GOOGLE_API_KEY="votre_clé_ici"
+export OPENWEATHER_API_KEY="votre_clé_ici"
+
+# Lancement du système
+poetry run python src/main.py
+
+# Tests
+poetry run pytest tests/
+
+# Interface web
+poetry run uvicorn src.api:app --reload --port 8000
+\end{verbatim}
+
+\subsubsection{Debugging et logs}
+\begin{verbatim}
+# Activation du mode debug
+export DEBUG=True
+
+# Logs détaillés
+export LOG_LEVEL=DEBUG
+
+# Monitoring des performances
+poetry add psutil
+python -c "
+import psutil
+print(f'CPU: {psutil.cpu_percent()}%')
+print(f'RAM: {psutil.virtual_memory().percent}%')
+"
+
+# Test de connectivité API
+curl -X GET "http://api.openweathermap.org/data/2.5/weather?q=Yaoundé&appid=YOUR_KEY"
+
+# Validation du format JSON
+python -m json.tool data/crops_cameroon.json
+
+# Profiling du code
+poetry add py-spy
+py-spy record -o profile.svg -- python src/main.py
+\end{verbatim}
+
+\subsubsection{Maintenance et mise à jour}
+\begin{verbatim}
+# Mise à jour des dépendances
+poetry update
+
+# Sauvegarde de la base de données
+cp -r data/ backup/data_$(date +%Y%m%d_%H%M%S)/
+
+# Nettoyage des logs
+find logs/ -name "*.log" -mtime +30 -delete
+
+# Test de santé du système
+poetry run python tests/health_check.py
+
+# Monitoring continu
+watch -n 10 'curl -s http://localhost:8000/health | jq .'
+\end{verbatim}
+
+\subsection{Annexe D : FAQ et problèmes courants}
+
+\subsubsection{Questions fréquentes}
+
+\textbf{Q1 : Comment ajouter un nouvel agent spécialisé ?}
+
+R : Pour ajouter un nouvel agent, suivez ces étapes :
+\begin{enumerate}
+    \item Créez une nouvelle classe héritant de \texttt{Agent}
+    \item Définissez les outils spécifiques avec le décorateur \texttt{@tool}
+    \item Ajoutez l'agent au dictionnaire \texttt{sub\_agents} de l'agent principal
+    \item Mettez à jour la méthode \texttt{\_analyze\_query} avec les mots-clés appropriés
+    \item Ajoutez des tests unitaires dans \texttt{tests/}
+\end{enumerate}
+
+\textbf{Q2 : Comment intégrer une nouvelle API externe ?}
+
+R : Créez un nouveau module dans \texttt{src/tools/} avec :
+\begin{itemize}
+    \item Une classe d'interface API
+    \item Gestion des erreurs et retry logic
+    \item Cache pour optimiser les performances
+    \item Tests de l'intégration
+\end{itemize}
+
+\textbf{Q3 : Comment personnaliser les recommandations par région ?}
+
+R : Modifiez le fichier \texttt{config/regional\_settings.py} :
+\begin{itemize}
+    \item Ajoutez des données spécifiques par région
+    \item Adaptez les algorithmes de recommandation
+    \item Mettez à jour la base de connaissances régionale
+\end{itemize}
+
+\subsubsection{Problèmes courants et solutions}
+
+\textbf{Erreur : "API Key non valide"}
+\begin{itemize}
+    \item Vérifiez que les clés API sont correctement définies dans les variables d'environnement
+    \item Testez les clés avec un appel direct à l'API
+    \item Régénérez les clés si nécessaire
+\end{itemize}
+
+\textbf{Erreur : "TimeoutError lors des appels API"}
+\begin{itemize}
+    \item Augmentez le timeout dans la configuration
+    \item Implémentez un mécanisme de retry
+    \item Utilisez un cache pour réduire les appels
+\end{itemize}
+
+\textbf{Performance lente du système}
+\begin{itemize}
+    \item Activez le cache Redis pour les réponses fréquentes
+    \item Optimisez les requêtes à la base de données
+    \item Utilisez le parallélisme pour les appels aux sous-agents
+\end{itemize}
+
+\textbf{Erreur : "Module non trouvé"}
+\begin{itemize}
+    \item Vérifiez que Poetry est correctement installé
+    \item Exécutez \texttt{poetry install} pour installer les dépendances
+    \item Activez l'environnement virtuel avec \texttt{poetry shell}
+\end{itemize}
+
+\textbf{Interface web ne se lance pas}
+\begin{itemize}
+    \item Vérifiez que le port 8000 n'est pas déjà utilisé
+    \item Contrôlez les logs pour identifier l'erreur
+    \item Testez avec un port différent : \texttt{--port 8001}
+\end{itemize}
+
+\subsubsection{Conseils de performance}
+
+\begin{itemize}
+    \item \textbf{Cache intelligent} : Implémentez un cache hiérarchique pour les données météo et market
+    \item \textbf{Parallélisation} : Utilisez \texttt{asyncio.gather()} pour les appels simultanés aux agents
+    \item \textbf{Pagination} : Limitez le nombre de résultats retournés par les APIs
+    \item \textbf{Compression} : Compressez les réponses HTTP avec gzip
+    \item \textbf{Monitoring} : Utilisez des métriques pour identifier les goulots d'étranglement
+\end{itemize}
+
+\subsubsection{Ressources de support}
+
+\begin{itemize}
+    \item \textbf{Documentation officielle} : \url{https://github.com/agriculture-cameroun/sma-docs}
+    \item \textbf{Issues GitHub} : \url{https://github.com/agriculture-cameroun/sma/issues}
+    \item \textbf{Email support} : --
+\end{itemize}

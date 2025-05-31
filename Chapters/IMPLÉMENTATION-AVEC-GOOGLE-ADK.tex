@@ -1,0 +1,2794 @@
+\chapter*{IMPLÉMENTATION AVEC GOOGLE ADK}
+\addcontentsline{toc}{chapter}{IMPLÉMENTATION AVEC GOOGLE ADK}
+
+\section{Concepts de Base ADK}
+
+\subsection{Création d'un agent simple}
+
+La création d'un agent avec Google ADK représente un changement de paradigme par rapport aux frameworks traditionnels. Au lieu de programmer explicitement chaque comportement, nous définissons les capacités et objectifs de l'agent, laissant le modèle de langage générer les comportements appropriés. Commençons par créer un agent météorologique simple pour illustrer les concepts fondamentaux.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Agent météorologique simple avec ADK]
+# weather_agent_simple.py
+from typing import Any
+import adk  # Import du framework ADK
+
+# Configuration de l'agent météorologique
+weather_agent = adk.Agent(
+    # Nom unique de l'agent dans le système
+    name="weather_agent",
+
+    # Modèle de langage à utiliser (Gemini 2.0)
+    model="gemini-2.0-flash-exp",
+
+    # Instructions définissant le comportement de l'agent
+    instructions="""
+    Tu es un expert météorologique spécialisé dans l'agriculture
+    au Cameroun. Tu fournis des prévisions météo précises et des
+    conseils agricoles basés sur les conditions climatiques.
+
+    Connaissances spécifiques:
+    - Les 10 régions du Cameroun et leurs climats
+    - Les saisons agricoles par région
+    - L'impact météo sur les cultures locales
+
+    Toujours répondre en français de manière claire et concise.
+    """,
+
+    # Outils disponibles pour l'agent
+    tools=[get_weather_data, analyze_agricultural_impact]
+)
+
+# Définition d'un outil pour récupérer les données météo
+@adk.tool
+def get_weather_data(region: str, days: int = 7) -> dict:
+    """
+    Récupère les prévisions météorologiques pour une région.
+
+    Args:
+        region: Nom de la région camerounaise
+        days: Nombre de jours de prévision (défaut: 7)
+
+    Returns:
+        Dictionnaire avec température, précipitations, humidité
+    """
+    # Simulation de données météo (à remplacer par API réelle)
+    return {
+        "region": region,
+        "temperature": {"min": 22, "max": 32, "avg": 27},
+        "precipitation": {"total_mm": 45, "days_with_rain": 3},
+        "humidity": {"avg": 75, "min": 60, "max": 85}
+    }
+
+# Utilisation de l'agent
+response = weather_agent.run(
+    "Quelle est la météo pour la région Centre cette semaine?"
+)
+print(response.content)
+\end{lstlisting}
+\end{figure}
+
+Ce code illustre les concepts fondamentaux d'ADK. L'objet \texttt{Agent} encapsule toute la logique nécessaire pour créer un agent intelligent. Le paramètre \texttt{name} fournit une identité unique à l'agent, essentielle pour la communication inter-agents. Le \texttt{model} spécifie la version de Gemini à utiliser, permettant de choisir entre performance et coût. Les \texttt{instructions} définissent le comportement de l'agent en langage naturel, une approche radicalement différente de la programmation traditionnelle.
+
+Les \textbf{outils (tools)} représentent l'interface entre l'agent et le monde extérieur. Le décorateur \texttt{@adk.tool} transforme une fonction Python ordinaire en outil utilisable par l'agent. ADK analyse automatiquement la signature de la fonction et sa docstring pour comprendre quand et comment l'utiliser. Cette approche déclarative élimine le besoin de définir manuellement des mappings complexes entre intentions et actions.
+
+\subsection{Cycle de vie d'un agent ADK}
+
+Le cycle de vie d'un agent ADK diffère significativement des agents traditionnels, intégrant de manière transparente les capacités des modèles de langage dans chaque phase d'exécution.
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{Cycle de vie d'un agent ADK}\\[10pt]
+\begin{enumerate}
+\item \textbf{Initialisation} : Chargement du modèle et des instructions
+\item \textbf{Réception} : Traitement de la requête utilisateur
+\item \textbf{Analyse} : Compréhension via le LLM
+\item \textbf{Planification} : Détermination des actions nécessaires
+\item \textbf{Exécution} : Invocation des outils si nécessaire
+\item \textbf{Synthèse} : Génération de la réponse
+\item \textbf{Retour} : Transmission du résultat
+\end{enumerate}
+}
+}
+\caption{Les phases du cycle de vie d'un agent ADK}
+\end{figure}
+
+Durant la phase d'\textbf{initialisation}, l'agent charge ses instructions et configure sa connexion avec le modèle Gemini. Cette phase inclut la validation des outils disponibles et la préparation du contexte initial. Contrairement aux frameworks traditionnels où l'initialisation implique le chargement de règles complexes, ADK se contente de préparer le prompt système qui guidera le comportement de l'agent.
+
+La phase de \textbf{réception et analyse} exploite pleinement les capacités de compréhension du langage naturel de Gemini. L'agent n'a pas besoin de parser explicitement la requête ou de la faire correspondre à des patterns prédéfinis. Le modèle comprend l'intention, le contexte et les nuances de la requête, permettant une interaction beaucoup plus naturelle et flexible.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Gestion du cycle de vie avec états persistants]
+class StatefulWeatherAgent:
+    """Agent météo avec gestion d'état et historique."""
+
+    def __init__(self):
+        # État persistant de l'agent
+        self.conversation_history = []
+        self.user_preferences = {}
+        self.cache = {}
+
+        # Configuration de l'agent avec état
+        self.agent = adk.Agent(
+            name="stateful_weather_agent",
+            model="gemini-2.0-flash-exp",
+            instructions=self._build_instructions(),
+            tools=[self.get_cached_weather, self.update_preferences]
+        )
+
+    def _build_instructions(self) -> str:
+        """Construit les instructions avec contexte."""
+        return f"""
+        Tu es un assistant météo agricole personnalisé.
+
+        Historique des conversations: {len(self.conversation_history)}
+        Préférences utilisateur: {self.user_preferences}
+
+        Utilise l'historique pour personnaliser tes réponses.
+        Mémorise les préférences pour des conseils adaptés.
+        """
+
+    @adk.tool
+    def get_cached_weather(self, region: str) -> dict:
+        """Récupère la météo avec mise en cache."""
+        cache_key = f"{region}_{datetime.now().date()}"
+
+        if cache_key not in self.cache:
+            # Récupération réelle des données
+            self.cache[cache_key] = fetch_real_weather_data(region)
+
+        return self.cache[cache_key]
+
+    def run(self, query: str) -> str:
+        """Exécute une requête en maintenant l'état."""
+        # Ajout à l'historique
+        self.conversation_history.append({
+            "timestamp": datetime.now(),
+            "query": query
+        })
+
+        # Mise à jour des instructions avec le contexte actuel
+        self.agent.instructions = self._build_instructions()
+
+        # Exécution de l'agent
+        response = self.agent.run(query)
+
+        # Sauvegarde de la réponse
+        self.conversation_history[-1]["response"] = response.content
+
+        return response.content
+\end{lstlisting}
+\end{figure}
+
+La phase de \textbf{planification} représente l'intelligence de l'agent en action. Le modèle détermine automatiquement quels outils utiliser, dans quel ordre, et comment combiner leurs résultats. Cette planification implicite élimine le besoin de définir des arbres de décision complexes ou des machines à états.
+
+L'\textbf{exécution} des outils se fait de manière transparente. ADK gère automatiquement la sérialisation des paramètres, l'appel de fonction, la gestion des erreurs et la désérialisation des résultats. L'agent peut décider d'appeler plusieurs outils en séquence ou en parallèle selon les besoins, optimisant automatiquement le flux d'exécution.
+
+\subsection{Gestion des comportements}
+
+Dans ADK, les comportements ne sont pas programmés explicitement mais émergent de la combinaison des instructions, du contexte et des capacités du modèle. Cette approche offre une flexibilité sans précédent tout en maintenant un contrôle sur les actions de l'agent.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Comportements adaptatifs avec ADK]
+# Configuration d'un agent avec comportements multiples
+adaptive_agent = adk.Agent(
+    name="adaptive_agricultural_agent",
+    model="gemini-2.0-flash-exp",
+    instructions="""
+    Tu es un conseiller agricole adaptatif qui ajuste son
+    comportement selon le contexte:
+
+    COMPORTEMENT URGENCE:
+    - Si conditions météo dangereuses détectées -> Mode alerte
+    - Réponses courtes et directives claires
+    - Priorisation des actions de protection
+
+    COMPORTEMENT PLANIFICATION:
+    - Pour questions sur calendrier cultural -> Mode conseil
+    - Réponses détaillées avec justifications
+    - Suggestions d'optimisation à long terme
+
+    COMPORTEMENT DIAGNOSTIC:
+    - Si symptômes de maladie mentionnés -> Mode analyse
+    - Questions de clarification systématiques
+    - Diagnostic différentiel avant recommandations
+
+    COMPORTEMENT ÉCONOMIQUE:
+    - Pour questions de rentabilité -> Mode business
+    - Calculs détaillés et projections
+    - Analyse risques/bénéfices
+
+    Adapte automatiquement ton comportement au contexte.
+    """,
+
+    # Outils spécialisés pour chaque comportement
+    tools=[
+        emergency_weather_check,
+        crop_calendar_planner,
+        disease_diagnostic_tool,
+        economic_analyzer
+    ]
+)
+
+# Définition d'outils comportementaux
+@adk.tool
+def emergency_weather_check(region: str) -> dict:
+    """Vérifie les alertes météo urgentes."""
+    alerts = check_weather_alerts(region)
+    return {
+        "has_alerts": len(alerts) > 0,
+        "severity": max([a.severity for a in alerts]) if alerts else 0,
+        "alerts": alerts,
+        "recommended_actions": generate_emergency_actions(alerts)
+    }
+
+@adk.tool
+def disease_diagnostic_tool(symptoms: list[str], crop: str) -> dict:
+    """Analyse les symptômes pour diagnostic."""
+    # Logique de diagnostic avec scoring probabiliste
+    possible_diseases = []
+
+    for disease in CROP_DISEASES[crop]:
+        match_score = calculate_symptom_match(symptoms, disease.symptoms)
+        if match_score > 0.3:  # Seuil de pertinence
+            possible_diseases.append({
+                "disease": disease.name,
+                "probability": match_score,
+                "treatment": disease.treatment_options,
+                "prevention": disease.prevention_measures
+            })
+
+    return {
+        "diagnoses": sorted(possible_diseases,
+                          key=lambda x: x["probability"],
+                          reverse=True),
+        "additional_checks": suggest_confirmatory_tests(possible_diseases)
+    }
+
+# Exemple d'utilisation montrant l'adaptation comportementale
+responses = {
+    "urgence": adaptive_agent.run(
+        "Alerte! Grosse tempête prévue demain sur Douala!"
+    ),
+    "planification": adaptive_agent.run(
+        "Quand planter le maïs dans l'Adamaoua?"
+    ),
+    "diagnostic": adaptive_agent.run(
+        "Mon cacao a des taches brunes sur les feuilles"
+    ),
+    "économique": adaptive_agent.run(
+        "Rentabilité du passage au café arabica?"
+    )
+}
+\end{lstlisting}
+\end{figure}
+
+Les \textbf{comportements contextuels} permettent à l'agent d'adapter automatiquement ses réponses selon la situation. L'agent analyse non seulement le contenu explicite de la requête mais aussi le contexte implicite, l'urgence perçue et l'historique de la conversation pour choisir le comportement approprié.
+
+La \textbf{composition de comportements} permet de créer des agents sophistiqués sans complexité excessive. Au lieu de définir des hiérarchies de comportements complexes comme dans JADE, ADK permet de décrire les comportements souhaités en langage naturel, laissant le modèle orchestrer leur activation.
+
+\subsection{Système de prompts et instructions}
+
+Le système de prompts constitue l'âme d'un agent ADK, définissant sa personnalité, ses connaissances et ses patterns de comportement. La maîtrise de l'ingénierie des prompts est essentielle pour créer des agents efficaces et fiables.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Structure avancée des prompts]
+class PromptTemplates:
+    """Gestion centralisée des templates de prompts."""
+
+    @staticmethod
+    def build_agent_prompt(
+        role: str,
+        expertise: list[str],
+        constraints: list[str],
+        examples: list[dict] = None
+    ) -> str:
+        """Construit un prompt structuré pour un agent."""
+
+        prompt = f"""
+# Rôle et Identité
+{role}
+
+# Domaines d'Expertise
+Tu possèdes une expertise approfondie dans:
+{chr(10).join(f'- {exp}' for exp in expertise)}
+
+# Contraintes et Règles
+Tu dois TOUJOURS respecter ces règles:
+{chr(10).join(f'- {constraint}' for constraint in constraints)}
+
+# Format de Réponse
+Structure tes réponses ainsi:
+1. **Analyse**: Comprendre la demande
+2. **Données**: Informations factuelles pertinentes
+3. **Recommandations**: Actions concrètes
+4. **Justification**: Explication des conseils
+
+# Ton et Style
+- Professionnel mais accessible
+- Utilise des termes locaux quand approprié
+- Adapte le niveau technique au contexte
+"""
+
+        # Ajout d'exemples si fournis
+        if examples:
+            prompt += "\n# Exemples de Bonnes Réponses\n"
+            for i, example in enumerate(examples, 1):
+                prompt += f"""
+Exemple {i}:
+Q: {example['question']}
+R: {example['response']}
+Raison: {example['why_good']}
+"""
+
+        return prompt
+
+# Utilisation pour créer un agent cultures sophistiqué
+crop_agent_prompt = PromptTemplates.build_agent_prompt(
+    role="""Tu es Dr. Agro, expert agronome virtuel spécialisé
+    dans l'agriculture camerounaise avec 20 ans d'expérience
+    terrain dans toutes les régions du pays.""",
+
+    expertise=[
+        "Cultures vivrières (maïs, manioc, plantain, igname)",
+        "Cultures de rente (cacao, café, palmier, coton)",
+        "Systèmes agroforestiers traditionnels",
+        "Adaptation au changement climatique",
+        "Agriculture biologique et durable"
+    ],
+
+    constraints=[
+        "Toujours vérifier la région avant de conseiller",
+        "Prioriser les solutions locales et accessibles",
+        "Mentionner les risques potentiels",
+        "Inclure le calendrier cultural spécifique",
+        "Respecter les pratiques traditionnelles efficaces"
+    ],
+
+    examples=[{
+        "question": "Quand planter le maïs à Garoua?",
+        "response": """Pour Garoua (région Nord), le maïs se plante:
+
+**Saison principale**: Mi-mai à début juin
+- Attendre les premières pluies stables
+- Sol humide sur 10-15cm de profondeur
+- Variétés recommandées: CMS 8704, CHC 202
+
+**Préparation**:
+- Labour début mai après premières pluies
+- Amendement organique: 5t/ha minimum
+- Espacement: 75cm x 25cm (53,000 plants/ha)
+
+**Attention**: Éviter les semis trop précoces
+(risque de sécheresse post-levée) ou trop tardifs
+(réduction du cycle).""",
+        "why_good": "Spécifique à la région, calendrier précis,
+                     conseils pratiques, avertissements"
+    }]
+)
+
+# Prompt dynamique avec injection de contexte
+class DynamicPromptAgent:
+    """Agent avec prompts dynamiques selon le contexte."""
+
+    def __init__(self):
+        self.base_prompt = """Tu es un assistant agricole intelligent."""
+        self.context_modifiers = {
+            "urgence": "\n⚠️ MODE URGENCE ACTIVÉ: Réponses courtes et actions immédiates.",
+            "débutant": "\nL'utilisateur est débutant: Explications simples, éviter le jargon.",
+            "expert": "\nL'utilisateur est expert: Détails techniques approfondis.",
+            "économique": "\nFocus économique: Inclure coûts, ROI, analyses financières."
+        }
+
+    def build_contextual_prompt(self, context_flags: list[str]) -> str:
+        """Construit un prompt adapté au contexte."""
+        prompt = self.base_prompt
+
+        for flag in context_flags:
+            if flag in self.context_modifiers:
+                prompt += self.context_modifiers[flag]
+
+        # Ajout de données temps réel
+        prompt += f"\n\nDate actuelle: {datetime.now().strftime('%d/%m/%Y')}"
+        prompt += f"\nSaison agricole: {self.get_current_season()}"
+
+        return prompt
+
+    def get_current_season(self) -> str:
+        """Détermine la saison agricole actuelle."""
+        month = datetime.now().month
+        if 3 <= month <= 5:
+            return "Début saison des pluies - Période de semis principale"
+        elif 6 <= month <= 8:
+            return "Saison des pluies - Croissance active"
+        elif 9 <= month <= 11:
+            return "Fin saison des pluies - Période de récolte"
+        else:
+            return "Saison sèche - Préparation des terres"
+\end{lstlisting}
+\end{figure}
+
+La \textbf{structure des instructions} suit des patterns éprouvés pour maximiser l'efficacité. L'identité et le rôle établissent le contexte général. Les domaines d'expertise délimitent les connaissances de l'agent. Les contraintes définissent les garde-fous comportementaux. Les exemples illustrent concrètement les attentes. Cette structure guide le modèle tout en laissant la flexibilité nécessaire pour des réponses naturelles.
+
+Les \textbf{prompts dynamiques} permettent d'adapter le comportement de l'agent en temps réel. L'injection de contexte (urgence, niveau utilisateur, focus thématique) modifie subtilement les réponses sans nécessiter plusieurs agents. L'inclusion d'informations temporelles (date, saison) ancre les conseils dans la réalité actuelle.
+
+La \textbf{gestion de la cohérence} à travers les prompts assure que l'agent maintient une personnalité et un style constants. Les instructions explicites sur le ton, le format de réponse et les priorités créent une expérience utilisateur prévisible et professionnelle tout en permettant l'adaptation contextuelle.
+
+\section{Communication Inter-Agents}
+
+\subsection{Mécanisme de communication dans ADK}
+
+La communication inter-agents dans ADK représente une évolution majeure par rapport aux protocoles rigides des systèmes traditionnels. Au lieu de messages ACL structurés, ADK permet une communication flexible combinant structure et langage naturel, facilitant des interactions plus riches et nuancées entre agents.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Architecture de communication inter-agents]
+from typing import Optional, Dict, Any
+import json
+from datetime import datetime
+
+class InterAgentCommunication:
+    """Système de communication entre agents ADK."""
+
+    def __init__(self):
+        # Registre des agents disponibles
+        self.agent_registry: Dict[str, adk.Agent] = {}
+        # File de messages pour communication asynchrone
+        self.message_queue: Dict[str, list] = {}
+        # Historique des communications
+        self.communication_log = []
+
+    def register_agent(self, agent: adk.Agent) -> None:
+        """Enregistre un agent dans le système."""
+        self.agent_registry[agent.name] = agent
+        self.message_queue[agent.name] = []
+        print(f"Agent {agent.name} enregistré avec succès")
+
+    def send_message(
+        self,
+        from_agent: str,
+        to_agent: str,
+        message_type: str,
+        content: Any,
+        priority: int = 5,
+        requires_response: bool = True
+    ) -> Optional[str]:
+        """
+        Envoie un message d'un agent à un autre.
+
+        Args:
+            from_agent: Nom de l'agent émetteur
+            to_agent: Nom de l'agent destinataire
+            message_type: Type de message (REQUEST, INFORM, QUERY, etc.)
+            content: Contenu du message
+            priority: Priorité du message (1-10, 10 étant le plus urgent)
+            requires_response: Si une réponse est attendue
+
+        Returns:
+            ID du message pour tracking
+        """
+        # Création du message structuré
+        message = {
+            "id": f"msg_{datetime.now().timestamp()}",
+            "timestamp": datetime.now().isoformat(),
+            "from": from_agent,
+            "to": to_agent,
+            "type": message_type,
+            "content": content,
+            "priority": priority,
+            "requires_response": requires_response,
+            "status": "sent"
+        }
+
+        # Ajout à la file du destinataire
+        if to_agent in self.message_queue:
+            self.message_queue[to_agent].append(message)
+            # Tri par priorité
+            self.message_queue[to_agent].sort(
+                key=lambda x: x["priority"],
+                reverse=True
+            )
+
+        # Log de la communication
+        self.communication_log.append(message)
+
+        # Si réponse requise, traiter immédiatement
+        if requires_response and to_agent in self.agent_registry:
+            response = self._process_message(to_agent, message)
+            return response
+
+        return message["id"]
+
+    def _process_message(
+        self,
+        agent_name: str,
+        message: Dict
+    ) -> Optional[str]:
+        """Traite un message pour un agent spécifique."""
+        agent = self.agent_registry[agent_name]
+
+        # Construction du contexte pour l'agent
+        context = f"""
+        Tu as reçu un message de type {message['type']}
+        de l'agent {message['from']}.
+
+        Contenu du message: {message['content']}
+
+        Réponds de manière appropriée selon ton expertise.
+        """
+
+        # Exécution de l'agent avec le contexte
+        response = agent.run(context)
+
+        # Enregistrement de la réponse
+        response_message = {
+            "id": f"resp_{message['id']}",
+            "timestamp": datetime.now().isoformat(),
+            "in_response_to": message['id'],
+            "from": agent_name,
+            "to": message['from'],
+            "type": "RESPONSE",
+            "content": response.content
+        }
+
+        self.communication_log.append(response_message)
+
+        return response.content
+
+# Protocole de communication pour requêtes complexes
+class CollaborativeProtocol:
+    """Protocole pour coordonner plusieurs agents."""
+
+    def __init__(self, comm_system: InterAgentCommunication):
+        self.comm = comm_system
+
+    def broadcast_request(
+        self,
+        from_agent: str,
+        request: str,
+        target_agents: list[str]
+    ) -> Dict[str, str]:
+        """
+        Diffuse une requête à plusieurs agents.
+
+        Returns:
+            Dictionnaire des réponses par agent
+        """
+        responses = {}
+
+        for target in target_agents:
+            response = self.comm.send_message(
+                from_agent=from_agent,
+                to_agent=target,
+                message_type="REQUEST",
+                content=request,
+                priority=7,
+                requires_response=True
+            )
+            responses[target] = response
+
+        return responses
+
+    def consensus_protocol(
+        self,
+        coordinator: str,
+        question: str,
+        experts: list[str],
+        threshold: float = 0.7
+    ) -> Dict[str, Any]:
+        """
+        Implémente un protocole de consensus entre experts.
+        """
+        # Phase 1: Collecte des opinions
+        opinions = self.broadcast_request(
+            from_agent=coordinator,
+            request=f"OPINION_REQUEST: {question}",
+            target_agents=experts
+        )
+
+        # Phase 2: Analyse de convergence
+        convergence_request = f"""
+        Analyse ces opinions d'experts sur: {question}
+
+        Opinions collectées:
+        {json.dumps(opinions, indent=2, ensure_ascii=False)}
+
+        Identifie:
+        1. Points de consensus
+        2. Points de divergence
+        3. Recommandation synthétisée
+        """
+
+        synthesis = self.comm.send_message(
+            from_agent=coordinator,
+            to_agent=coordinator,  # Auto-analyse
+            message_type="ANALYZE",
+            content=convergence_request
+        )
+
+        return {
+            "opinions": opinions,
+            "synthesis": synthesis,
+            "consensus_reached": self._calculate_consensus(opinions) > threshold
+        }
+\end{lstlisting}
+\end{figure}
+
+Le \textbf{système de communication ADK} adopte une approche hybride qui combine la structure nécessaire pour la fiabilité avec la flexibilité du langage naturel. Chaque message contient des métadonnées structurées (émetteur, destinataire, type, priorité) tout en permettant un contenu en langage naturel que les agents peuvent interpréter selon leur contexte et expertise.
+
+La \textbf{gestion asynchrone} des messages permet aux agents de traiter les requêtes selon leur disponibilité et la priorité des messages. Cette approche évite les blocages et permet un traitement parallèle efficace des requêtes complexes nécessitant l'intervention de plusieurs agents.
+
+\subsection{Implémentation des outils (tools)}
+
+Les outils dans ADK représentent le pont entre l'intelligence linguistique des agents et les actions concrètes dans le monde réel. Leur implémentation correcte est cruciale pour créer des agents véritablement utiles.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Implémentation d'outils spécialisés pour l'agriculture]
+from typing import List, Dict, Optional, Tuple
+import adk
+from datetime import datetime, timedelta
+import requests
+
+# Outil de données météorologiques avancé
+@adk.tool
+def get_detailed_weather_forecast(
+    region: str,
+    coordinates: Optional[Tuple[float, float]] = None,
+    days_ahead: int = 7,
+    include_agricultural_metrics: bool = True
+) -> Dict[str, Any]:
+    """
+    Récupère des prévisions météo détaillées avec métriques agricoles.
+
+    Args:
+        region: Nom de la région camerounaise
+        coordinates: Coordonnées GPS optionnelles pour précision
+        days_ahead: Nombre de jours de prévision (max 14)
+        include_agricultural_metrics: Inclure ETP, degrés-jours, etc.
+
+    Returns:
+        Prévisions détaillées avec analyse agricole
+    """
+    # Mapping des régions aux coordonnées principales
+    REGION_COORDS = {
+        "Centre": (3.8480, 11.5021),  # Yaoundé
+        "Littoral": (4.0511, 9.7679),  # Douala
+        "Ouest": (5.4798, 10.4234),    # Bafoussam
+        "Nord": (9.3265, 13.5847),     # Garoua
+        "Extrême-Nord": (10.5806, 14.3210),  # Maroua
+        "Adamaoua": (7.3697, 12.7489), # Ngaoundéré
+        "Est": (5.6333, 13.6833),      # Bertoua
+        "Sud": (2.7203, 11.1466),      # Ebolowa
+        "Sud-Ouest": (4.1597, 9.2425), # Buea
+        "Nord-Ouest": (5.9631, 10.1591) # Bamenda
+    }
+
+    # Utiliser coordonnées fournies ou celles de la région
+    if not coordinates and region in REGION_COORDS:
+        coordinates = REGION_COORDS[region]
+
+    # Simulation d'appel API météo (remplacer par vraie API)
+    base_data = {
+        "region": region,
+        "coordinates": coordinates,
+        "forecast_date": datetime.now().isoformat(),
+        "days": []
+    }
+
+    # Génération des prévisions quotidiennes
+    for day in range(days_ahead):
+        date = datetime.now() + timedelta(days=day)
+
+        daily_forecast = {
+            "date": date.strftime("%Y-%m-%d"),
+            "temperature": {
+                "min": 20 + (day % 5),
+                "max": 30 + (day % 7),
+                "morning": 22 + (day % 4),
+                "afternoon": 28 + (day % 6),
+                "evening": 24 + (day % 3)
+            },
+            "precipitation": {
+                "probability": 30 + (day * 10 % 70),
+                "amount_mm": 0 if day % 3 == 0 else 5 + (day * 3),
+                "type": "rain" if day % 3 != 0 else "none",
+                "intensity": "light" if day % 2 == 0 else "moderate"
+            },
+            "humidity": {
+                "average": 65 + (day * 5 % 20),
+                "morning": 80 + (day % 10),
+                "afternoon": 50 + (day % 15)
+            },
+            "wind": {
+                "speed_kmh": 10 + (day % 20),
+                "direction": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][day % 8],
+                "gusts_kmh": 15 + (day % 25)
+            },
+            "solar": {
+                "radiation_mj": 15 + (day % 10),
+                "sunshine_hours": 6 + (day % 4),
+                "uv_index": 8 + (day % 4)
+            }
+        }
+
+        # Ajout des métriques agricoles si demandé
+        if include_agricultural_metrics:
+            daily_forecast["agricultural_metrics"] = {
+                "evapotranspiration_mm": calculate_eto(daily_forecast),
+                "growing_degree_days": calculate_gdd(
+                    daily_forecast["temperature"]["min"],
+                    daily_forecast["temperature"]["max"],
+                    base_temp=10  # Température de base pour le maïs
+                ),
+                "chill_hours": calculate_chill_hours(
+                    daily_forecast["temperature"]["min"]
+                ),
+                "soil_moisture_index": estimate_soil_moisture(
+                    daily_forecast["precipitation"]["amount_mm"],
+                    daily_forecast["evapotranspiration_mm"]
+                ),
+                "spray_conditions": evaluate_spray_conditions(
+                    daily_forecast["wind"]["speed_kmh"],
+                    daily_forecast["humidity"]["average"],
+                    daily_forecast["precipitation"]["probability"]
+                )
+            }
+
+        base_data["days"].append(daily_forecast)
+
+    # Ajout d'alertes agricoles
+    base_data["agricultural_alerts"] = generate_agricultural_alerts(base_data)
+
+    return base_data
+
+# Fonctions auxiliaires pour calculs agricoles
+def calculate_eto(weather_data: Dict) -> float:
+    """Calcule l'évapotranspiration de référence (ETo)."""
+    # Formule simplifiée de Hargreaves
+    tmax = weather_data["temperature"]["max"]
+    tmin = weather_data["temperature"]["min"]
+    tmean = (tmax + tmin) / 2
+    solar_rad = weather_data["solar"]["radiation_mj"]
+
+    eto = 0.0023 * solar_rad * (tmean + 17.8) * (tmax - tmin) ** 0.5
+    return round(eto, 2)
+
+def calculate_gdd(tmin: float, tmax: float, base_temp: float = 10) -> float:
+    """Calcule les degrés-jours de croissance."""
+    tavg = (tmin + tmax) / 2
+    if tavg <= base_temp:
+        return 0
+    return round(tavg - base_temp, 2)
+
+def evaluate_spray_conditions(
+    wind_speed: float,
+    humidity: float,
+    rain_prob: float
+) -> Dict[str, Any]:
+    """Évalue les conditions pour pulvérisation."""
+    conditions = {
+        "suitable": True,
+        "risk_level": "low",
+        "warnings": []
+    }
+
+    if wind_speed > 15:
+        conditions["suitable"] = False
+        conditions["warnings"].append("Vent trop fort - risque de dérive")
+        conditions["risk_level"] = "high"
+    elif wind_speed > 10:
+        conditions["warnings"].append("Vent modéré - pulvériser avec précaution")
+        conditions["risk_level"] = "medium"
+
+    if humidity < 40:
+        conditions["warnings"].append("Humidité faible - évaporation rapide")
+        conditions["risk_level"] = "medium"
+
+    if rain_prob > 60:
+        conditions["suitable"] = False
+        conditions["warnings"].append("Pluie probable - traitement inefficace")
+        conditions["risk_level"] = "high"
+
+    return conditions
+
+# Outil d'analyse des sols
+@adk.tool
+def analyze_soil_data(
+    ph: float,
+    organic_matter_percent: float,
+    nitrogen_ppm: float,
+    phosphorus_ppm: float,
+    potassium_ppm: float,
+    texture: str = "loamy",
+    crop_planned: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Analyse les données du sol et fournit des recommandations.
+
+    Args:
+        ph: pH du sol (0-14)
+        organic_matter_percent: Pourcentage de matière organique
+        nitrogen_ppm: Azote disponible en ppm
+        phosphorus_ppm: Phosphore disponible en ppm
+        potassium_ppm: Potassium disponible en ppm
+        texture: Type de sol (sandy, loamy, clay)
+        crop_planned: Culture prévue pour recommandations spécifiques
+
+    Returns:
+        Analyse complète avec recommandations d'amendement
+    """
+    analysis = {
+        "soil_health_score": 0,
+        "pH_status": "",
+        "nutrient_status": {},
+        "recommendations": [],
+        "amendments_needed": {},
+        "suitable_crops": []
+    }
+
+    # Analyse du pH
+    if 6.0 <= ph <= 7.5:
+        analysis["pH_status"] = "optimal"
+        ph_score = 100
+    elif 5.5 <= ph < 6.0 or 7.5 < ph <= 8.0:
+        analysis["pH_status"] = "acceptable"
+        ph_score = 70
+        if ph < 6.0:
+            analysis["recommendations"].append(
+                "Apporter de la chaux agricole (500kg/ha) pour augmenter le pH"
+            )
+            analysis["amendments_needed"]["lime_kg_per_ha"] = 500
+        else:
+            analysis["recommendations"].append(
+                "Apporter du soufre élémentaire (200kg/ha) pour réduire le pH"
+            )
+            analysis["amendments_needed"]["sulfur_kg_per_ha"] = 200
+    else:
+        analysis["pH_status"] = "problématique"
+        ph_score = 40
+
+    # Analyse des nutriments
+    nutrient_thresholds = {
+        "nitrogen": {"low": 10, "optimal": 20, "high": 40},
+        "phosphorus": {"low": 15, "optimal": 30, "high": 60},
+        "potassium": {"low": 100, "optimal": 200, "high": 400}
+    }
+
+    # Évaluation NPK
+    npk_values = {
+        "nitrogen": nitrogen_ppm,
+        "phosphorus": phosphorus_ppm,
+        "potassium": potassium_ppm
+    }
+
+    nutrient_scores = {}
+    for nutrient, value in npk_values.items():
+        thresholds = nutrient_thresholds[nutrient]
+        if value < thresholds["low"]:
+            status = "déficient"
+            score = 40
+            analysis["recommendations"].append(
+                f"Augmenter {nutrient} - niveau très bas"
+            )
+        elif value < thresholds["optimal"]:
+            status = "bas"
+            score = 70
+        elif value <= thresholds["high"]:
+            status = "optimal"
+            score = 100
+        else:
+            status = "excessif"
+            score = 70
+
+        analysis["nutrient_status"][nutrient] = {
+            "value": value,
+            "status": status,
+            "score": score
+        }
+        nutrient_scores[nutrient] = score
+
+    # Calcul du score global
+    analysis["soil_health_score"] = round(
+        (ph_score + sum(nutrient_scores.values()) +
+         min(100, organic_matter_percent * 20)) / 5
+    )
+
+    # Recommandations de fertilisation
+    if crop_planned:
+        analysis["fertilizer_recommendation"] = calculate_fertilizer_needs(
+            npk_values, crop_planned, texture
+        )
+
+    # Cultures adaptées selon l'analyse
+    analysis["suitable_crops"] = recommend_crops_for_soil(
+        ph, nutrient_scores, texture, organic_matter_percent
+    )
+
+    return analysis
+
+# Outil de diagnostic des maladies
+@adk.tool
+def diagnose_plant_disease(
+    crop: str,
+    symptoms: List[str],
+    affected_parts: List[str],
+    development_stage: str,
+    photos_base64: Optional[List[str]] = None,
+    environmental_conditions: Optional[Dict] = None
+) -> Dict[str, Any]:
+    """
+    Diagnostique les maladies des plantes basé sur symptômes.
+
+    Args:
+        crop: Type de culture affectée
+        symptoms: Liste des symptômes observés
+        affected_parts: Parties de la plante touchées
+        development_stage: Stade de développement de la plante
+        photos_base64: Photos encodées en base64 (optionnel)
+        environmental_conditions: Conditions météo récentes
+
+    Returns:
+        Diagnostic avec probabilités et recommandations de traitement
+    """
+    # Base de données des maladies par culture
+    DISEASE_DATABASE = {
+        "cacao": {
+            "pourriture_brune": {
+                "symptoms": ["taches brunes", "pourriture des cabosses",
+                            "taches huileuses", "mycélium blanc"],
+                "affected_parts": ["cabosses", "feuilles", "tronc"],
+                "favorable_conditions": {"humidity": ">80%", "temp": "20-30°C"},
+                "treatments": {
+                    "cultural": ["Éliminer cabosses infectées",
+                               "Améliorer aération", "Drainage"],
+                    "biological": ["Trichoderma spp.", "Bacillus subtilis"],
+                    "chemical": ["Métalaxyl", "Fosétyl-Al", "Hydroxyde de cuivre"]
+                }
+            },
+            "swollen_shoot": {
+                "symptoms": ["gonflement des tiges", "feuilles déformées",
+                           "bandes rouges sur cabosses", "die-back"],
+                "affected_parts": ["tiges", "feuilles", "cabosses"],
+                "favorable_conditions": {"vector": "cochenilles"},
+                "treatments": {
+                    "cultural": ["Élimination plants malades",
+                               "Contrôle des cochenilles", "Replantation"],
+                    "biological": ["Prédateurs de cochenilles"],
+                    "chemical": ["Insecticides systémiques"]
+                }
+            }
+        },
+        "maïs": {
+            "chenille_legionnaire": {
+                "symptoms": ["feuilles trouées", "excréments visibles",
+                           "whorl endommagé", "épis attaqués"],
+                "affected_parts": ["feuilles", "whorl", "épis"],
+                "favorable_conditions": {"temp": ">20°C", "humidity": "moderate"},
+                "treatments": {
+                    "cultural": ["Rotation des cultures", "Labour profond",
+                               "Élimination résidus"],
+                    "biological": ["Bt spray", "Trichogramma", "Neem"],
+                    "chemical": ["Emamectin benzoate", "Chlorantraniliprole"]
+                }
+            }
+        }
+        # Ajouter d'autres cultures et maladies...
+    }
+
+    diagnosis_results = {
+        "possible_diseases": [],
+        "confidence_level": "low",
+        "immediate_actions": [],
+        "treatment_plan": {},
+        "prevention_measures": []
+    }
+
+    # Analyse des symptômes
+    if crop in DISEASE_DATABASE:
+        crop_diseases = DISEASE_DATABASE[crop]
+
+        for disease_name, disease_info in crop_diseases.items():
+            symptom_match = calculate_symptom_similarity(
+                symptoms, disease_info["symptoms"]
+            )
+            part_match = calculate_set_overlap(
+                affected_parts, disease_info["affected_parts"]
+            )
+
+            # Score de probabilité
+            probability_score = (symptom_match * 0.7 + part_match * 0.3)
+
+            # Ajustement selon conditions environnementales
+            if environmental_conditions:
+                env_match = check_environmental_match(
+                    environmental_conditions,
+                    disease_info.get("favorable_conditions", {})
+                )
+                probability_score = probability_score * 0.8 + env_match * 0.2
+
+            if probability_score > 0.3:  # Seuil de pertinence
+                diagnosis_results["possible_diseases"].append({
+                    "disease": disease_name,
+                    "probability": round(probability_score * 100, 1),
+                    "matching_symptoms": [s for s in symptoms
+                                        if s in disease_info["symptoms"]],
+                    "treatments": disease_info["treatments"],
+                    "urgency": "high" if probability_score > 0.7 else "medium"
+                })
+
+        # Tri par probabilité
+        diagnosis_results["possible_diseases"].sort(
+            key=lambda x: x["probability"], reverse=True
+        )
+
+        # Détermination du niveau de confiance
+        if diagnosis_results["possible_diseases"]:
+            top_probability = diagnosis_results["possible_diseases"][0]["probability"]
+            if top_probability > 80:
+                diagnosis_results["confidence_level"] = "high"
+            elif top_probability > 60:
+                diagnosis_results["confidence_level"] = "medium"
+            else:
+                diagnosis_results["confidence_level"] = "low"
+
+            # Actions immédiates basées sur le diagnostic principal
+            main_disease = diagnosis_results["possible_diseases"][0]
+            diagnosis_results["immediate_actions"] = generate_immediate_actions(
+                main_disease, development_stage
+            )
+            diagnosis_results["treatment_plan"] = create_treatment_plan(
+                main_disease, crop, development_stage
+            )
+
+    # Analyse d'images si fournies
+    if photos_base64:
+        # Ici, intégration avec service de vision par ordinateur
+        # Pour l'instant, simulation
+        diagnosis_results["image_analysis"] = {
+            "status": "analyzed",
+            "additional_symptoms_detected": ["décoloration", "nécrose"]
+        }
+
+    return diagnosis_results
+
+def calculate_symptom_similarity(
+    observed: List[str],
+    reference: List[str]
+) -> float:
+    """Calcule la similarité entre symptômes observés et référence."""
+    if not reference:
+        return 0.0
+
+    matches = sum(1 for symptom in observed
+                  if any(ref in symptom.lower() for ref in reference))
+    return matches / len(reference)
+
+def create_treatment_plan(
+    disease_info: Dict,
+    crop: str,
+    stage: str
+) -> Dict[str, Any]:
+    """Crée un plan de traitement détaillé."""
+    plan = {
+        "immediate": [],
+        "short_term": [],  # 1-7 jours
+        "medium_term": [],  # 1-4 semaines
+        "monitoring": []
+    }
+
+    treatments = disease_info["treatments"]
+
+    # Actions immédiates
+    if "cultural" in treatments:
+        plan["immediate"].extend(treatments["cultural"][:2])
+
+    # Court terme
+    if disease_info["urgency"] == "high":
+        if "chemical" in treatments:
+            plan["short_term"].append({
+                "action": f"Appliquer {treatments['chemical'][0]}",
+                "dosage": "Selon instructions fabricant",
+                "frequency": "Répéter après 7-10 jours si nécessaire",
+                "precautions": "Porter EPI, éviter heures chaudes"
+            })
+
+    # Moyen terme
+    if "biological" in treatments:
+        plan["medium_term"].extend([
+            {"action": f"Introduire {agent}",
+             "timing": "Après réduction initiale de l'infestation"}
+            for agent in treatments["biological"]
+        ])
+
+    # Suivi
+    plan["monitoring"] = [
+        "Inspecter quotidiennement les nouvelles infections",
+        "Noter l'évolution des symptômes",
+        "Évaluer l'efficacité du traitement après 1 semaine"
+    ]
+
+    return plan
+\end{lstlisting}
+\end{figure}
+
+Les \textbf{outils agricoles spécialisés} démontrent la puissance d'ADK pour créer des fonctionnalités complexes accessibles via le langage naturel. Chaque outil encapsule une expertise spécifique tout en restant flexible dans son utilisation. Le décorateur \texttt{@adk.tool} transforme automatiquement les fonctions Python en outils que l'agent peut invoquer intelligemment.
+
+La \textbf{conception des outils} suit des principes importants pour maximiser leur utilité. Les signatures de fonction claires avec typage permettent à l'agent de comprendre quand et comment utiliser l'outil. Les docstrings détaillées fournissent le contexte nécessaire pour une utilisation appropriée. Les paramètres optionnels offrent de la flexibilité tout en maintenant la simplicité pour les cas d'usage basiques.
+
+\subsection{Passage de contexte entre agents}
+
+Le passage efficace du contexte entre agents est crucial pour maintenir la cohérence des interactions et permettre une collaboration sophistiquée dans la résolution de problèmes complexes.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Système de gestion du contexte inter-agents]
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional
+import json
+from datetime import datetime
+
+@dataclass
+class AgentContext:
+    """Contexte partagé entre agents."""
+    session_id: str
+    user_id: str
+    conversation_history: List[Dict] = field(default_factory=list)
+    user_profile: Dict[str, Any] = field(default_factory=dict)
+    current_task: Optional[Dict] = None
+    shared_knowledge: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def add_interaction(self, agent: str, content: str, response: str):
+        """Ajoute une interaction à l'historique."""
+        self.conversation_history.append({
+            "timestamp": datetime.now().isoformat(),
+            "agent": agent,
+            "user_input": content,
+            "agent_response": response
+        })
+
+    def get_relevant_history(self, agent_type: str, limit: int = 5) -> List[Dict]:
+        """Récupère l'historique pertinent pour un type d'agent."""
+        relevant = [
+            interaction for interaction in self.conversation_history
+            if agent_type in interaction.get("agent", "") or
+               agent_type in interaction.get("agent_response", "")
+        ]
+        return relevant[-limit:] if relevant else []
+
+    def to_prompt_context(self, for_agent: str) -> str:
+        """Convertit le contexte en prompt pour un agent spécifique."""
+        context_parts = []
+
+        # Informations utilisateur
+        if self.user_profile:
+            context_parts.append(f"""
+Profil utilisateur:
+- Région: {self.user_profile.get('region', 'Non spécifié')}
+- Type d'exploitation: {self.user_profile.get('farm_type', 'Non spécifié')}
+- Cultures principales: {', '.join(self.user_profile.get('main_crops', []))}
+- Expérience: {self.user_profile.get('experience_years', 'Non spécifié')} ans
+""")
+
+        # Tâche en cours
+        if self.current_task:
+            context_parts.append(f"""
+Tâche actuelle: {self.current_task.get('description')}
+Objectif: {self.current_task.get('goal')}
+Contraintes: {', '.join(self.current_task.get('constraints', []))}
+""")
+
+        # Historique pertinent
+        relevant_history = self.get_relevant_history(for_agent)
+        if relevant_history:
+            history_summary = "\n".join([
+                f"- {h['agent']}: {h['user_input'][:100]}..."
+                for h in relevant_history
+            ])
+            context_parts.append(f"Historique récent:\n{history_summary}")
+
+        # Connaissances partagées pertinentes
+        if for_agent in self.shared_knowledge:
+            context_parts.append(f"""
+Données partagées par autres agents:
+{json.dumps(self.shared_knowledge[for_agent], indent=2, ensure_ascii=False)}
+""")
+
+        return "\n\n".join(context_parts)
+
+class ContextAwareAgentSystem:
+    """Système d'agents avec gestion avancée du contexte."""
+
+    def __init__(self):
+        self.agents = {}
+        self.contexts = {}  # Contextes par session
+        self.context_enrichers = {}
+
+    def register_agent_with_context(
+        self,
+        agent_name: str,
+        agent: adk.Agent,
+        context_enricher: Optional[callable] = None
+    ):
+        """Enregistre un agent avec enrichissement de contexte optionnel."""
+        self.agents[agent_name] = agent
+        if context_enricher:
+            self.context_enrichers[agent_name] = context_enricher
+
+    def process_request(
+        self,
+        session_id: str,
+        agent_name: str,
+        user_input: str,
+        additional_context: Optional[Dict] = None
+    ) -> str:
+        """Traite une requête avec contexte complet."""
+        # Récupération ou création du contexte de session
+        if session_id not in self.contexts:
+            self.contexts[session_id] = AgentContext(
+                session_id=session_id,
+                user_id=f"user_{session_id[:8]}"
+            )
+
+        context = self.contexts[session_id]
+
+        # Enrichissement du contexte si enrichisseur disponible
+        if agent_name in self.context_enrichers:
+            enriched = self.context_enrichers[agent_name](
+                context, user_input, additional_context
+            )
+            context.shared_knowledge[agent_name] = enriched
+
+        # Construction du prompt avec contexte
+        contextual_prompt = f"""
+{context.to_prompt_context(agent_name)}
+
+Requête actuelle: {user_input}
+
+{f"Contexte additionnel: {json.dumps(additional_context)}"
+ if additional_context else ""}
+"""
+
+        # Exécution de l'agent avec contexte
+        agent = self.agents[agent_name]
+        response = agent.run(contextual_prompt)
+
+        # Mise à jour du contexte
+        context.add_interaction(agent_name, user_input, response.content)
+
+        # Extraction d'informations pour autres agents
+        self._extract_shareable_knowledge(
+            agent_name, response.content, context
+        )
+
+        return response.content
+
+    def _extract_shareable_knowledge(
+        self,
+        source_agent: str,
+        response: str,
+        context: AgentContext
+    ):
+        """Extrait les connaissances partageables du response."""
+        # Patterns d'extraction selon le type d'agent
+        extraction_patterns = {
+            "weather_agent": self._extract_weather_data,
+            "crops_agent": self._extract_crop_recommendations,
+            "health_agent": self._extract_disease_info,
+            "economic_agent": self._extract_economic_data,
+            "resources_agent": self._extract_resource_data
+        }
+
+        if source_agent in extraction_patterns:
+            extracted = extraction_patterns[source_agent](response)
+
+            # Partage avec agents pertinents
+            for target_agent, data in extracted.items():
+                if target_agent in context.shared_knowledge:
+                    context.shared_knowledge[target_agent].update(data)
+                else:
+                    context.shared_knowledge[target_agent] = data
+
+    def _extract_weather_data(self, response: str) -> Dict[str, Any]:
+        """Extrait données météo pour partage."""
+        # Logique d'extraction spécifique
+        extracted = {}
+
+        # Données pour l'agent cultures
+        if "pluie" in response.lower() or "précipitation" in response.lower():
+            extracted["crops_agent"] = {
+                "recent_weather": "Précipitations détectées",
+                "irrigation_needed": "précipitation" not in response.lower()
+            }
+
+        # Données pour l'agent santé
+        if "humidité" in response.lower() and "élevée" in response.lower():
+            extracted["health_agent"] = {
+                "disease_risk": "Élevé - conditions humides",
+                "fungal_alert": True
+            }
+
+        return extracted
+
+# Exemple d'enrichisseur de contexte pour l'agent économique
+def economic_context_enricher(
+    context: AgentContext,
+    user_input: str,
+    additional: Optional[Dict]
+) -> Dict[str, Any]:
+    """Enrichit le contexte avec données économiques pertinentes."""
+    enriched = {
+        "market_trends": [],
+        "price_history": {},
+        "seasonal_factors": {}
+    }
+
+    # Extraction des cultures mentionnées
+    mentioned_crops = extract_crop_mentions(user_input)
+
+    # Récupération historique des prix si disponible
+    for crop in mentioned_crops:
+        if crop in context.shared_knowledge.get("price_data", {}):
+            enriched["price_history"][crop] = context.shared_knowledge[
+                "price_data"
+            ][crop]
+
+    # Facteurs saisonniers
+    current_month = datetime.now().month
+    if 3 <= current_month <= 5:
+        enriched["seasonal_factors"]["supply"] = "Faible - début saison"
+        enriched["seasonal_factors"]["price_trend"] = "Haussier"
+    elif 9 <= current_month <= 11:
+        enriched["seasonal_factors"]["supply"] = "Élevé - période récolte"
+        enriched["seasonal_factors"]["price_trend"] = "Baissier"
+
+    return enriched
+
+# Orchestrateur de contexte pour requêtes complexes
+class ContextualOrchestrator:
+    """Orchestre les agents avec partage de contexte intelligent."""
+
+    def __init__(self, agent_system: ContextAwareAgentSystem):
+        self.system = agent_system
+
+    def handle_complex_query(
+        self,
+        session_id: str,
+        query: str,
+        user_profile: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """Gère requête complexe nécessitant plusieurs agents."""
+        # Analyse de la requête pour identifier agents nécessaires
+        required_agents = self._identify_required_agents(query)
+
+        # Initialisation du contexte si nécessaire
+        if session_id not in self.system.contexts:
+            context = AgentContext(
+                session_id=session_id,
+                user_id=f"user_{session_id[:8]}",
+                user_profile=user_profile or {}
+            )
+            self.system.contexts[session_id] = context
+        else:
+            context = self.system.contexts[session_id]
+
+        # Définition de la tâche
+        context.current_task = {
+            "description": query,
+            "goal": "Fournir réponse complète et cohérente",
+            "constraints": ["Utiliser données locales", "Prioriser durabilité"],
+            "agents_involved": required_agents
+        }
+
+        # Exécution séquentielle ou parallèle selon dépendances
+        results = {}
+
+        # Phase 1: Agents de données (météo, ressources)
+        data_agents = [a for a in required_agents
+                      if a in ["weather_agent", "resources_agent"]]
+        for agent in data_agents:
+            results[agent] = self.system.process_request(
+                session_id, agent, query
+            )
+
+        # Phase 2: Agents d'analyse (cultures, santé)
+        analysis_agents = [a for a in required_agents
+                          if a in ["crops_agent", "health_agent"]]
+        for agent in analysis_agents:
+            results[agent] = self.system.process_request(
+                session_id, agent, query
+            )
+
+        # Phase 3: Agent économique (utilise données des autres)
+        if "economic_agent" in required_agents:
+            results["economic_agent"] = self.system.process_request(
+                session_id, "economic_agent", query
+            )
+
+        # Synthèse des résultats
+        synthesis = self._synthesize_results(results, query, context)
+
+        return {
+            "query": query,
+            "agents_consulted": required_agents,
+            "individual_responses": results,
+            "synthesis": synthesis,
+            "confidence_score": self._calculate_confidence(results),
+            "follow_up_suggestions": self._generate_follow_ups(results, context)
+        }
+
+    def _identify_required_agents(self, query: str) -> List[str]:
+        """Identifie les agents nécessaires pour une requête."""
+        query_lower = query.lower()
+        required = []
+
+        # Patterns de détection
+        patterns = {
+            "weather_agent": ["météo", "pluie", "température", "climat",
+                            "prévision", "saison"],
+            "crops_agent": ["planter", "semer", "culture", "variété",
+                          "calendrier", "récolte"],
+            "health_agent": ["maladie", "ravageur", "symptôme", "traitement",
+                           "feuille", "tache"],
+            "economic_agent": ["prix", "marché", "rentable", "coût",
+                             "vendre", "profit"],
+            "resources_agent": ["sol", "eau", "engrais", "irrigation",
+                              "nutriment", "amendement"]
+        }
+
+        for agent, keywords in patterns.items():
+            if any(keyword in query_lower for keyword in keywords):
+                required.append(agent)
+
+        # Si requête générale, inclure agent principal
+        if not required or len(required) > 2:
+            required.insert(0, "main_agent")
+
+        return required
+
+    def _synthesize_results(
+        self,
+        results: Dict[str, str],
+        original_query: str,
+        context: AgentContext
+    ) -> str:
+        """Synthétise les réponses multiples en réponse cohérente."""
+        synthesis_prompt = f"""
+Synthétise ces réponses d'experts en une réponse unique et cohérente.
+
+Question originale: {original_query}
+
+Réponses des experts:
+{json.dumps(results, indent=2, ensure_ascii=False)}
+
+Profil utilisateur: {json.dumps(context.user_profile, ensure_ascii=False)}
+
+Crée une réponse qui:
+1. Intègre harmonieusement toutes les informations pertinentes
+2. Élimine les redondances
+3. Présente les informations dans un ordre logique
+4. Met en évidence les points d'action concrets
+5. Reste accessible et pratique pour l'agriculteur
+
+Format: Réponse directe et structurée, sans mentionner les agents individuels.
+"""
+
+        # Utilisation de l'agent principal pour synthèse
+        if "main_agent" in self.system.agents:
+            response = self.system.agents["main_agent"].run(synthesis_prompt)
+            return response.content
+        else:
+            # Synthèse basique si pas d'agent principal
+            return "\n\n".join([
+                f"**{agent.replace('_agent', '').title()}**: {response}"
+                for agent, response in results.items()
+            ])
+\end{lstlisting}
+\end{figure}
+
+Le \textbf{système de contexte partagé} permet aux agents de maintenir une compréhension cohérente de la conversation et des besoins de l'utilisateur. La classe \texttt{AgentContext} encapsule toutes les informations pertinentes, de l'historique conversationnel aux données partagées entre agents. Cette approche centralisée facilite la coordination tout en permettant à chaque agent de maintenir sa spécialisation.
+
+L'\textbf{enrichissement contextuel} adapte dynamiquement le contexte selon les besoins spécifiques de chaque agent. Les enrichisseurs de contexte extraient et préparent les informations pertinentes, évitant de surcharger les agents avec des données non pertinentes tout en assurant qu'ils disposent de toutes les informations nécessaires.
+
+\subsection{Exemples de messages échangés}
+
+Pour illustrer concrètement la communication inter-agents, examinons des exemples réels de messages échangés dans différents scénarios d'utilisation du système Agriculture Cameroun.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Exemples de communications inter-agents en action]
+# Scénario 1: Planification de culture avec conditions météo
+scenario_1 = {
+    "user_query": "Je veux planter du maïs la semaine prochaine à Garoua",
+    "message_flow": [
+        {
+            "from": "main_agent",
+            "to": "weather_agent",
+            "type": "REQUEST",
+            "content": {
+                "action": "get_forecast",
+                "parameters": {
+                    "region": "Nord",
+                    "city": "Garoua",
+                    "days_ahead": 10,
+                    "agricultural_focus": True
+                },
+                "context": "Utilisateur veut planter maïs semaine prochaine"
+            },
+            "timestamp": "2024-03-15T10:00:00Z"
+        },
+        {
+            "from": "weather_agent",
+            "to": "main_agent",
+            "type": "INFORM",
+            "content": {
+                "forecast_summary": {
+                    "next_7_days": {
+                        "rainfall_probability": [20, 30, 65, 80, 75, 40, 25],
+                        "rainfall_amount_mm": [0, 5, 15, 25, 20, 8, 3],
+                        "temperature_range": {"min": 24, "max": 38},
+                        "soil_moisture_trend": "increasing from day 3"
+                    },
+                    "recommendation": "Conditions favorables à partir du jour 3",
+                    "alerts": ["Fortes pluies prévues jours 4-5"]
+                }
+            },
+            "timestamp": "2024-03-15T10:00:05Z"
+        },
+        {
+            "from": "main_agent",
+            "to": "crops_agent",
+            "type": "QUERY",
+            "content": {
+                "question": "Période optimale plantation maïs Garoua?",
+                "weather_data": {
+                    "rain_expected": "jours 3-5",
+                    "soil_moisture": "croissante"
+                },
+                "urgency": "plantation semaine prochaine"
+            },
+            "timestamp": "2024-03-15T10:00:10Z"
+        },
+        {
+            "from": "crops_agent",
+            "to": "main_agent",
+            "type": "INFORM",
+            "content": {
+                "analysis": {
+                    "current_period": "Fin saison sèche",
+                    "optimal_window": "Mi-mai à début juin",
+                    "user_timing": "Légèrement précoce mais acceptable"
+                },
+                "recommendations": {
+                    "wait_for_rain": "Attendre après premières pluies (jour 3-4)",
+                    "variety": "Utiliser variété précoce (CMS 8704)",
+                    "preparation": "Préparer terrain jours 1-2",
+                    "density": "53,000 plants/ha pour semis précoce"
+                },
+                "risks": ["Stress hydrique si pluies retardées"]
+            },
+            "timestamp": "2024-03-15T10:00:15Z"
+        }
+    ]
+}
+
+# Scénario 2: Diagnostic collaboratif de maladie
+scenario_2 = {
+    "user_query": "Mes plants de tomates ont des taches noires et les feuilles jaunissent",
+    "message_flow": [
+        {
+            "from": "main_agent",
+            "to": "health_agent",
+            "type": "REQUEST",
+            "content": {
+                "symptoms": ["taches noires", "feuilles jaunes"],
+                "crop": "tomate",
+                "urgency": "high",
+                "request_type": "diagnostic"
+            },
+            "timestamp": "2024-03-15T14:30:00Z"
+        },
+        {
+            "from": "health_agent",
+            "to": "weather_agent",
+            "type": "QUERY",
+            "content": {
+                "question": "Conditions météo récentes propices maladies fongiques?",
+                "period": "last_14_days",
+                "focus": ["humidity", "rainfall", "temperature"]
+            },
+            "timestamp": "2024-03-15T14:30:05Z"
+        },
+        {
+            "from": "weather_agent",
+            "to": "health_agent",
+            "type": "INFORM",
+            "content": {
+                "recent_conditions": {
+                    "avg_humidity": 85,
+                    "rainy_days": 8,
+                    "temperature": {"min": 22, "max": 28},
+                    "assessment": "Conditions très favorables champignons"
+                }
+            },
+            "timestamp": "2024-03-15T14:30:08Z"
+        },
+        {
+            "from": "health_agent",
+            "to": "main_agent",
+            "type": "PROPOSE",
+            "content": {
+                "diagnosis": {
+                    "primary": {
+                        "disease": "Mildiou (Phytophthora infestans)",
+                        "confidence": 85,
+                        "evidence": [
+                            "Taches noires caractéristiques",
+                            "Jaunissement foliaire",
+                            "Conditions météo favorables"
+                        ]
+                    },
+                    "secondary": {
+                        "disease": "Alternariose",
+                        "confidence": 45
+                    }
+                },
+                "treatment_plan": {
+                    "immediate": [
+                        "Retirer feuilles atteintes",
+                        "Appliquer fongicide cuivré"
+                    ],
+                    "follow_up": "Traitement préventif hebdomadaire"
+                },
+                "need_economic_analysis": True
+            },
+            "timestamp": "2024-03-15T14:30:15Z"
+        },
+        {
+            "from": "main_agent",
+            "to": "economic_agent",
+            "type": "REQUEST",
+            "content": {
+                "analyze_treatment_cost": {
+                    "disease": "Mildiou tomate",
+                    "treatments": ["fongicide cuivré", "mancozèbe"],
+                    "surface": "estimation 0.5 hectare",
+                    "compare_with": "pertes potentielles sans traitement"
+                }
+            },
+            "timestamp": "2024-03-15T14:30:20Z"
+        },
+        {
+            "from": "economic_agent",
+            "to": "main_agent",
+            "type": "INFORM",
+            "content": {
+                "cost_analysis": {
+                    "treatment_costs": {
+                        "cuivre": {"total": 45000, "per_application": 15000},
+                        "mancozèbe": {"total": 35000, "per_application": 11500}
+                    },
+                    "potential_losses": {
+                        "without_treatment": 450000,
+                        "with_treatment": 90000
+                    },
+                    "roi": "8:1",
+                    "recommendation": "Traitement fortement rentable"
+                },
+                "market_info": "Prix tomates actuellement élevé (800 FCFA/kg)"
+            },
+            "timestamp": "2024-03-15T14:30:25Z"
+        }
+    ]
+}
+
+# Scénario 3: Optimisation des ressources multi-agents
+scenario_3 = {
+    "user_query": "Comment optimiser l'eau pour mes cultures en saison sèche?",
+    "message_flow": [
+        {
+            "from": "main_agent",
+            "to": "resources_agent",
+            "type": "REQUEST",
+            "content": {
+                "resource": "water",
+                "context": "saison sèche",
+                "objective": "optimization",
+                "need_crop_info": True
+            },
+            "timestamp": "2024-03-15T16:00:00Z"
+        },
+        {
+            "from": "resources_agent",
+            "to": "crops_agent",
+            "type": "QUERY",
+            "content": {
+                "question": "Besoins hydriques cultures principales utilisateur?",
+                "period": "saison sèche",
+                "include": ["critical_stages", "drought_tolerance"]
+            },
+            "timestamp": "2024-03-15T16:00:05Z"
+        },
+        {
+            "from": "crops_agent",
+            "to": "resources_agent",
+            "type": "INFORM",
+            "content": {
+                "user_crops": ["maïs", "haricot", "tomate"],
+                "water_requirements": {
+                    "maïs": {
+                        "daily_mm": 5.5,
+                        "critical_stage": "floraison",
+                        "drought_tolerance": "moyenne"
+                    },
+                    "haricot": {
+                        "daily_mm": 4.0,
+                        "critical_stage": "formation gousses",
+                        "drought_tolerance": "faible"
+                    },
+                    "tomate": {
+                        "daily_mm": 6.0,
+                        "critical_stage": "fructification",
+                        "drought_tolerance": "faible"
+                    }
+                }
+            },
+            "timestamp": "2024-03-15T16:00:10Z"
+        },
+        {
+            "from": "resources_agent",
+            "to": "weather_agent",
+            "type": "QUERY",
+            "content": {
+                "forecast_request": "saison sèche",
+                "parameters": ["expected_rainfall", "evapotranspiration", "dry_spell_duration"]
+            },
+            "timestamp": "2024-03-15T16:00:15Z"
+        },
+        {
+            "from": "weather_agent",
+            "to": "resources_agent",
+            "type": "INFORM",
+            "content": {
+                "dry_season_forecast": {
+                    "expected_rainfall_mm": 150,
+                    "distribution": "Très irrégulière",
+                    "avg_eto_daily": 7.5,
+                    "longest_dry_spell": "45 jours",
+                    "start_rains": "Mi-mars"
+                }
+            },
+            "timestamp": "2024-03-15T16:00:18Z"
+        },
+        {
+            "from": "resources_agent",
+            "to": "main_agent",
+            "type": "PROPOSE",
+            "content": {
+                "optimization_plan": {
+                    "strategies": [
+                        {
+                            "technique": "Irrigation goutte-à-goutte",
+                            "efficiency": "90%",
+                            "water_savings": "60% vs aspersion",
+                            "priority_crops": ["tomate", "haricot"]
+                        },
+                        {
+                            "technique": "Paillage organique",
+                            "efficiency": "Réduit évaporation 70%",
+                            "additional_benefits": ["fertilité", "température sol"]
+                        },
+                        {
+                            "technique": "Calendrier irrigation",
+                            "details": {
+                                "maïs": "3 jours intervalle, matin",
+                                "haricot": "2 jours intervalle",
+                                "tomate": "quotidien phase critique"
+                            }
+                        }
+                    ],
+                    "water_budget": {
+                        "available": "15000 litres/semaine",
+                        "required_optimized": "12500 litres/semaine",
+                        "reserve": "2500 litres urgences"
+                    }
+                }
+            },
+            "timestamp": "2024-03-15T16:00:25Z"
+        },
+        {
+            "from": "main_agent",
+            "to": "economic_agent",
+            "type": "REQUEST",
+            "content": {
+                "evaluate_investment": "système goutte-à-goutte",
+                "surface": "0.5 hectare",
+                "crops": ["tomate", "haricot"],
+                "water_cost_savings": True
+            },
+            "timestamp": "2024-03-15T16:00:30Z"
+        },
+        {
+            "from": "economic_agent",
+            "to": "main_agent",
+            "type": "INFORM",
+            "content": {
+                "investment_analysis": {
+                    "initial_cost": 450000,
+                    "annual_savings": {
+                        "water": 125000,
+                        "labor": 84000,
+                        "increased_yield": 180000
+                    },
+                    "payback_period": "1.2 années",
+                    "recommendation": "Investissement très rentable"
+                }
+            },
+            "timestamp": "2024-03-15T16:00:35Z"
+        }
+    ],
+    "final_synthesis": {
+        "from": "main_agent",
+        "to": "user",
+        "content": """
+        Plan d'optimisation de l'eau en saison sèche:
+
+        1. **Installation goutte-à-goutte** (priorité haute)
+           - Économie 60% d'eau
+           - Retour sur investissement: 1.2 ans
+           - Commencer par tomates et haricots
+
+        2. **Techniques complémentaires**:
+           - Paillage organique (réduit évaporation 70%)
+           - Irrigation tôt matin (moins d'évaporation)
+           - Calendrier adapté par culture
+
+        3. **Gestion intelligente**:
+           - Budget eau: 12,500L/semaine (2,500L réserve)
+           - Prioriser phases critiques des cultures
+           - Surveiller prévisions pour anticiper
+
+        Économies totales estimées: 389,000 FCFA/an
+        """
+    }
+}
+
+# Fonction de visualisation des échanges
+def visualize_message_flow(scenario: Dict) -> None:
+    """Affiche le flux de messages de manière lisible."""
+    print(f"\n{'='*60}")
+    print(f"SCÉNARIO: {scenario['user_query']}")
+    print(f"{'='*60}\n")
+
+    for i, msg in enumerate(scenario["message_flow"], 1):
+        print(f"Message {i}:")
+        print(f"  DE: {msg['from']} → VERS: {msg['to']}")
+        print(f"  TYPE: {msg['type']}")
+        print(f"  CONTENU: {json.dumps(msg['content'], indent=4, ensure_ascii=False)}")
+        print(f"  TEMPS: {msg['timestamp']}")
+        print(f"  {'-'*50}\n")
+
+    if "final_synthesis" in scenario:
+        print(f"\nRÉPONSE FINALE À L'UTILISATEUR:")
+        print(scenario["final_synthesis"]["content"])
+
+# Analyse des patterns de communication
+def analyze_communication_patterns(scenarios: List[Dict]) -> Dict:
+    """Analyse les patterns de communication entre agents."""
+    patterns = {
+        "message_types": {},
+        "agent_interactions": {},
+        "average_chain_length": 0,
+        "common_sequences": []
+    }
+
+    total_messages = 0
+
+    for scenario in scenarios:
+        for msg in scenario.get("message_flow", []):
+            # Types de messages
+            msg_type = msg["type"]
+            patterns["message_types"][msg_type] = patterns["message_types"].get(
+                msg_type, 0
+            ) + 1
+
+            # Interactions entre agents
+            interaction = f"{msg['from']} → {msg['to']}"
+            patterns["agent_interactions"][interaction] = patterns[
+                "agent_interactions"
+            ].get(interaction, 0) + 1
+
+            total_messages += 1
+
+    patterns["average_chain_length"] = total_messages / len(scenarios)
+
+    # Identification des séquences communes
+    # (Logique simplifiée pour l'exemple)
+    patterns["common_sequences"] = [
+        "main_agent → weather_agent → crops_agent",
+        "health_agent → weather_agent → economic_agent",
+        "resources_agent → crops_agent → weather_agent"
+    ]
+
+    return patterns
+\end{lstlisting}
+\end{figure}
+
+Ces exemples illustrent la \textbf{richesse des interactions} possibles entre agents dans ADK. Les messages combinent structure (type, métadonnées) et contenu flexible, permettant des échanges sophistiqués tout en maintenant la traçabilité et la cohérence. Les agents peuvent initier des chaînes de communication complexes, demander des clarifications, proposer des solutions et collaborer pour résoudre des problèmes multi-facettes.
+
+La \textbf{nature asynchrone} de la communication permet aux agents de traiter les requêtes en parallèle, améliorant significativement les temps de réponse pour les questions complexes. L'orchestration intelligente assure que les dépendances entre agents sont respectées tout en maximisant le parallélisme possible.
+
+\section{Implémentation de l'Agent Principal}
+
+\subsection{Structure du fichier agent.py}
+
+L'agent principal constitue le cœur du système Agriculture Cameroun, orchestrant l'ensemble des interactions et assurant la cohérence des réponses. Sa structure reflète cette responsabilité centrale tout en maintenant la modularité nécessaire pour l'évolution du système.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Structure complète de l'agent principal]
+# agent.py - Agent Coordinateur Principal du Système Agriculture Cameroun
+"""
+Agent principal orchestrant les interactions entre tous les agents spécialisés
+pour fournir une assistance agricole complète aux agriculteurs camerounais.
+
+Author: Mbassi Loic Aron
+Date: 2024
+Version: 1.0.0
+"""
+
+import os
+from typing import Dict, List, Optional, Any, Tuple
+from datetime import datetime
+import json
+import logging
+
+# Imports ADK et dépendances
+import adk
+from adk import Agent, Tool
+from dotenv import load_dotenv
+
+# Imports locaux
+from .config import (
+    AgricultureConfig,
+    RegionType,
+    CropType,
+    DEFAULT_LANGUAGE,
+    SUPPORTED_LANGUAGES
+)
+from .prompts import (
+    MAIN_AGENT_INSTRUCTIONS,
+    SYNTHESIS_PROMPT_TEMPLATE,
+    ERROR_MESSAGES,
+    WELCOME_MESSAGES
+)
+from .tools import (
+    route_to_weather_agent,
+    route_to_crops_agent,
+    route_to_health_agent,
+    route_to_economic_agent,
+    route_to_resources_agent,
+    extract_user_context,
+    synthesize_responses
+)
+from .utils import (
+    setup_logging,
+    validate_api_key,
+    get_current_season,
+    format_response,
+    track_usage_metrics
+)
+
+# Configuration du logging
+logger = setup_logging(__name__, level=logging.INFO)
+
+# Chargement des variables d'environnement
+load_dotenv()
+
+class MainCoordinatorAgent:
+    """
+    Agent coordinateur principal du système Agriculture Cameroun.
+
+    Cet agent sert de point d'entrée unique pour toutes les requêtes
+    utilisateur et coordonne les réponses des agents spécialisés.
+
+    Attributes:
+        config (AgricultureConfig): Configuration du système
+        agent (adk.Agent): Instance de l'agent ADK
+        sub_agents (Dict[str, Agent]): Dictionnaire des sous-agents
+        context_manager (ContextManager): Gestionnaire de contexte
+        metrics_tracker (MetricsTracker): Suivi des métriques
+    """
+
+    def __init__(self, config: Optional[AgricultureConfig] = None):
+        """
+        Initialise l'agent coordinateur principal.
+
+        Args:
+            config: Configuration optionnelle du système
+        """
+        self.config = config or AgricultureConfig()
+        self.sub_agents = {}
+        self.context_manager = ContextManager()
+        self.metrics_tracker = MetricsTracker()
+
+        # Validation de la configuration
+        self._validate_configuration()
+
+        # Initialisation de l'agent ADK
+        self.agent = self._create_agent()
+
+        # Chargement des sous-agents
+        self._load_sub_agents()
+
+        logger.info("Agent coordinateur principal initialisé avec succès")
+
+    def _validate_configuration(self) -> None:
+        """Valide la configuration du système."""
+        if not validate_api_key(os.getenv("GEMINI_API_KEY")):
+            raise ValueError("Clé API Gemini invalide ou manquante")
+
+        if self.config.default_region not in RegionType.__members__:
+            logger.warning(
+                f"Région par défaut {self.config.default_region} invalide, "
+                f"utilisation de {RegionType.CENTRE.value}"
+            )
+            self.config.default_region = RegionType.CENTRE.value
+
+    def _create_agent(self) -> Agent:
+        """
+        Crée et configure l'agent ADK principal.
+
+        Returns:
+            Instance configurée de l'agent ADK
+        """
+        # Construction des instructions dynamiques
+        instructions = self._build_dynamic_instructions()
+
+        # Définition des outils disponibles
+        tools = [
+            self._create_routing_tool(),
+            self._create_context_tool(),
+            self._create_synthesis_tool(),
+            self._create_help_tool(),
+            self._create_feedback_tool()
+        ]
+
+        # Création de l'agent
+        agent = adk.Agent(
+            name="agriculture_cameroun_coordinator",
+            model=self.config.coordinator_model,
+            instructions=instructions,
+            tools=tools,
+            temperature=0.7,  # Équilibre créativité/cohérence
+            max_tokens=2048,  # Réponses détaillées possibles
+            metadata={
+                "version": "1.0.0",
+                "region": self.config.default_region,
+                "language": self.config.default_language
+            }
+        )
+
+        return agent
+
+    def _build_dynamic_instructions(self) -> str:
+        """
+        Construit les instructions dynamiques pour l'agent.
+
+        Returns:
+            Instructions complètes formatées
+        """
+        # Récupération du template de base
+        base_instructions = MAIN_AGENT_INSTRUCTIONS
+
+        # Ajout du contexte temporel
+        current_season = get_current_season()
+        temporal_context = f"""
+
+## Contexte Temporel Actuel
+- Date: {datetime.now().strftime('%d %B %Y')}
+- Saison agricole: {current_season['name']}
+- Activités typiques: {', '.join(current_season['activities'])}
+- Alertes saisonnières: {', '.join(current_season['alerts'])}
+"""
+
+        # Ajout de la configuration régionale
+        regional_context = f"""
+
+## Configuration Régionale
+- Région par défaut: {self.config.default_region}
+- Langue principale: {self.config.default_language}
+- Cultures principales: {', '.join(self._get_main_crops())}
+"""
+
+        # Assemblage des instructions complètes
+        full_instructions = base_instructions + temporal_context + regional_context
+
+        # Ajout des instructions spécifiques si disponibles
+        if hasattr(self.config, 'custom_instructions'):
+            full_instructions += f"\n\n## Instructions Personnalisées\n{self.config.custom_instructions}"
+
+        return full_instructions
+
+    def _create_routing_tool(self) -> Tool:
+        """
+        Crée l'outil de routage vers les sous-agents.
+
+        Returns:
+            Outil configuré pour le routage
+        """
+        @adk.tool
+        def route_query(
+            query: str,
+            detected_intent: str,
+            confidence: float,
+            target_agents: List[str]
+        ) -> Dict[str, Any]:
+            """
+            Route une requête vers les agents appropriés.
+
+            Args:
+                query: Requête utilisateur originale
+                detected_intent: Intention détectée (weather, crops, etc.)
+                confidence: Niveau de confiance (0-1)
+                target_agents: Liste des agents à consulter
+
+            Returns:
+                Réponses agrégées des agents
+            """
+            logger.info(
+                f"Routage requête - Intent: {detected_intent}, "
+                f"Confiance: {confidence:.2f}, "
+                f"Agents: {target_agents}"
+            )
+
+            responses = {}
+            errors = []
+
+            # Enrichissement du contexte
+            context = self.context_manager.get_current_context()
+            enriched_query = f"{query}\n\nContexte: {json.dumps(context)}"
+
+            # Appel des agents cibles
+            for agent_name in target_agents:
+                try:
+                    if agent_name == "weather" and "weather_agent" in self.sub_agents:
+                        response = route_to_weather_agent(
+                            enriched_query,
+                            self.sub_agents["weather_agent"]
+                        )
+                        responses["weather"] = response
+
+                    elif agent_name == "crops" and "crops_agent" in self.sub_agents:
+                        response = route_to_crops_agent(
+                            enriched_query,
+                            self.sub_agents["crops_agent"]
+                        )
+                        responses["crops"] = response
+
+                    elif agent_name == "health" and "health_agent" in self.sub_agents:
+                        response = route_to_health_agent(
+                            enriched_query,
+                            self.sub_agents["health_agent"]
+                        )
+                        responses["health"] = response
+
+                    elif agent_name == "economic" and "economic_agent" in self.sub_agents:
+                        response = route_to_economic_agent(
+                            enriched_query,
+                            self.sub_agents["economic_agent"]
+                        )
+                        responses["economic"] = response
+
+                    elif agent_name == "resources" and "resources_agent" in self.sub_agents:
+                        response = route_to_resources_agent(
+                            enriched_query,
+                            self.sub_agents["resources_agent"]
+                        )
+                        responses["resources"] = response
+
+                except Exception as e:
+                    logger.error(f"Erreur routage vers {agent_name}: {str(e)}")
+                    errors.append({
+                        "agent": agent_name,
+                        "error": str(e)
+                    })
+
+            # Mise à jour des métriques
+            self.metrics_tracker.record_routing(
+                intent=detected_intent,
+                agents_called=target_agents,
+                success_rate=len(responses) / len(target_agents) if target_agents else 0
+            )
+
+            return {
+                "responses": responses,
+                "errors": errors,
+                "metadata": {
+                    "timestamp": datetime.now().isoformat(),
+                    "confidence": confidence,
+                    "agents_consulted": list(responses.keys())
+                }
+            }
+
+        return route_query
+
+    def _create_context_tool(self) -> Tool:
+        """Crée l'outil de gestion du contexte utilisateur."""
+        @adk.tool
+        def manage_context(
+            action: str,
+            data: Optional[Dict] = None
+        ) -> Dict[str, Any]:
+            """
+            Gère le contexte de la conversation.
+
+            Actions disponibles:
+            - get: Récupère le contexte actuel
+            - update: Met à jour le contexte
+            - reset: Réinitialise le contexte
+            """
+            if action == "get":
+                return self.context_manager.get_current_context()
+            elif action == "update" and data:
+                return self.context_manager.update_context(data)
+            elif action == "reset":
+                return self.context_manager.reset_context()
+
+        return manage_context
+
+    def _create_synthesis_tool(self) -> Tool:
+        """Crée l'outil de synthèse des réponses multi-agents."""
+        return synthesize_responses  # Importé depuis tools.py
+
+    def _load_sub_agents(self) -> None:
+        """Charge tous les sous-agents du système."""
+        # Import dynamique des sous-agents
+        from sub_agents.weather.agent import weather_agent
+        from sub_agents.crops.agent import crops_agent
+        from sub_agents.health.agent import health_agent
+        from sub_agents.economic.agent import economic_agent
+        from sub_agents.resources.agent import resources_agent
+
+        self.sub_agents = {
+            "weather_agent": weather_agent,
+            "crops_agent": crops_agent,
+            "health_agent": health_agent,
+            "economic_agent": economic_agent,
+            "resources_agent": resources_agent
+        }
+
+        logger.info(f"Chargé {len(self.sub_agents)} sous-agents")
+
+    def process_query(
+        self,
+        query: str,
+        session_id: Optional[str] = None,
+        user_context: Optional[Dict] = None
+    ) -> str:
+        """
+        Traite une requête utilisateur.
+
+        Args:
+            query: Question ou requête de l'utilisateur
+            session_id: Identifiant de session (optionnel)
+            user_context: Contexte utilisateur additionnel
+
+        Returns:
+            Réponse formatée pour l'utilisateur
+        """
+        try:
+            # Enrichissement du contexte
+            if user_context:
+                self.context_manager.update_context(user_context)
+
+            # Traitement par l'agent principal
+            response = self.agent.run(query)
+
+            # Formatage de la réponse
+            formatted_response = format_response(
+                response.content,
+                language=self.config.default_language
+            )
+
+            # Enregistrement des métriques
+            self.metrics_tracker.record_query(
+                query=query,
+                response_length=len(formatted_response),
+                session_id=session_id
+            )
+
+            return formatted_response
+
+        except Exception as e:
+            logger.error(f"Erreur traitement requête: {str(e)}")
+            return ERROR_MESSAGES.get(
+                self.config.default_language,
+                ERROR_MESSAGES["fr"]
+            )["general_error"]
+
+# Instance globale de l'agent principal
+main_agent = MainCoordinatorAgent()
+
+# Point d'entrée pour l'utilisation directe
+def process_agricultural_query(
+    query: str,
+    **kwargs
+) -> str:
+    """
+    Fonction principale pour traiter les requêtes agricoles.
+
+    Args:
+        query: Question de l'agriculteur
+        **kwargs: Paramètres additionnels (session_id, context, etc.)
+
+    Returns:
+        Réponse complète et contextualisée
+    """
+    return main_agent.process_query(query, **kwargs)
+\end{lstlisting}
+\end{figure}
+
+\subsection{Configuration et initialisation}
+
+La configuration de l'agent principal suit une approche modulaire permettant une personnalisation facile selon les besoins spécifiques. Le fichier \texttt{config.py} centralise toutes les constantes et paramètres configurables du système.
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{Structure de Configuration (config.py)}\\[10pt]
+Le fichier complet est disponible sur :\\
+\texttt{agriculture/config.py}\\[10pt]
+Points clés de la configuration :\\
+- Énumérations des régions et cultures du Cameroun\\
+- Paramètres des modèles Gemini pour chaque agent\\
+- Configuration des timeouts et retry\\
+- Mappings culture-région avec calendriers\\
+- Variables d'environnement par défaut
+}
+}
+\caption{Organisation de la configuration du système}
+\end{figure}
+
+L'initialisation du système suit une séquence précise garantissant que tous les composants sont correctement configurés avant le démarrage. Cette approche défensive permet de détecter les problèmes de configuration tôt et de fournir des messages d'erreur explicites.
+
+\subsection{Routage vers les sous-agents}
+
+Le mécanisme de routage constitue l'intelligence centrale du coordinateur, déterminant quels agents consulter pour chaque requête. Cette décision s'appuie sur l'analyse sémantique de la requête par Gemini, permettant une compréhension nuancée des besoins de l'utilisateur.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Logique de routage intelligente (extrait)]
+# Extrait de tools.py montrant le pattern de routage
+def determine_routing_strategy(query: str) -> Dict[str, Any]:
+    """
+    Détermine la stratégie de routage optimale.
+
+    Le code complet est dans : agriculture/tools.py
+
+    Stratégies principales :
+    1. Mono-agent : Requête simple, un seul domaine
+    2. Multi-agents séquentiel : Dépendances entre agents
+    3. Multi-agents parallèle : Agents indépendants
+    4. Hiérarchique : Agent principal + spécialistes
+    """
+    # Analyse sémantique de la requête
+    # Identification des domaines concernés
+    # Détermination des dépendances
+    # Retour de la stratégie optimale
+    pass
+
+# Pattern d'appel vers un sous-agent
+def route_to_weather_agent(query: str, agent: Agent) -> Dict[str, Any]:
+    """
+    Route vers l'agent météorologique.
+    Code complet : agriculture/tools.py
+
+    Gère :
+    - Enrichissement du contexte météo
+    - Formatage des paramètres spécifiques
+    - Gestion des erreurs et retry
+    - Extraction des données structurées
+    """
+    pass
+\end{lstlisting}
+\end{figure}
+
+\subsection{Code source annoté ligne par ligne}
+
+Pour une compréhension approfondie du code de l'agent principal, consultez le fichier source complet sur GitHub avec ses annotations détaillées :
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{Code Source Annoté}\\[10pt]
+�� Fichier : \texttt{agriculture/agent.py}\\[10pt]
+Le fichier contient des annotations détaillées expliquant :\\
+- Chaque import et sa justification\\
+- La logique de chaque méthode\\
+- Les patterns de conception utilisés\\
+- Les points d'extension possibles\\
+- Les considérations de performance\\[10pt]
+Sections principales annotées :\\
+• Initialisation et validation (lignes 50-120)\\
+• Création dynamique des instructions (lignes 150-220)\\
+• Système de routage intelligent (lignes 250-400)\\
+• Gestion d'erreurs et fallbacks (lignes 450-500)\\
+• Métriques et monitoring (lignes 550-600)
+}
+}
+\caption{Guide d'annotations du code source principal}
+\end{figure}
+
+\section{Implémentation des Agents Spécialisés}
+
+\subsection{Agent Météorologique}
+
+L'Agent Météorologique fournit des informations climatiques essentielles pour la prise de décision agricole. Son implémentation combine accès aux données météo, analyse contextuelle et recommandations agricoles spécifiques.
+
+\subsubsection{Structure et outils}
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{Structure de l'Agent Météorologique}\\[10pt]
+�� Localisation : \texttt{sub\_agents/weather/}\\[10pt]
+\textbf{Fichiers principaux :}\\
+• \texttt{agent.py} - Définition de l'agent\\
+• \texttt{prompts.py} - Instructions spécialisées\\
+• \texttt{tools.py} - Outils météorologiques\\[10pt]
+\textbf{Capacités principales :}\\
+- Prévisions court/moyen/long terme\\
+- Alertes climatiques agricoles\\
+- Analyse d'impact sur les cultures\\
+- Recommandations contextuelles\\
+- Historique et tendances climatiques
+}
+}
+\caption{Organisation de l'Agent Météorologique}
+\end{figure}
+
+L'agent utilise plusieurs outils spécialisés pour collecter et analyser les données météorologiques. Le fichier \texttt{tools.py} contient des fonctions pour accéder aux APIs météo, calculer des indices agricoles (ETP, degrés-jours) et générer des alertes personnalisées.
+
+\subsubsection{Intégration des données météo}
+
+L'agent intègre plusieurs sources de données pour fournir des informations fiables et précises. Le système utilise une approche de fusion de données combinant sources globales et locales quand disponibles.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Pattern d'intégration météo (exemple simplifié)]
+# Extrait conceptuel de sub_agents/weather/tools.py
+class WeatherDataIntegration:
+    """
+    Voir le code complet dans : sub_agents/weather/tools.py
+
+    Intègre données de :
+    - Services météo nationaux camerounais
+    - APIs globales (OpenWeather, etc.)
+    - Stations météo locales si disponibles
+    - Données satellitaires pour zones reculées
+
+    Fonctionnalités clés :
+    - Cache intelligent avec durée de vie adaptative
+    - Fallback automatique entre sources
+    - Interpolation pour zones sans données
+    - Validation et correction des anomalies
+    """
+
+    def get_agricultural_forecast(self, location: Dict) -> Dict:
+        """
+        Génère prévisions optimisées pour l'agriculture.
+
+        Inclut :
+        - Probabilité et quantité de pluie
+        - Fenêtres optimales pour travaux agricoles
+        - Risques climatiques (gel, sécheresse, etc.)
+        - Indices agro-météorologiques
+        """
+        pass
+\end{lstlisting}
+\end{figure}
+
+\subsubsection{Exemples de requêtes/réponses}
+
+L'agent météorologique excelle dans la fourniture d'informations contextualisées pour l'agriculture. Voici des exemples typiques d'interactions :
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\small
+\textbf{Exemple 1 : Prévision pour semis}\\
+\textit{Q: "Météo pour semer le maïs cette semaine à Garoua?"}\\[5pt]
+R: "Pour Garoua (région Nord) cette semaine :\\
+- Lundi-Mardi : Temps sec, sol dur (éviter semis)\\
+- Mercredi : Pluies modérées prévues (15mm)\\
+- Jeudi-Vendredi : Sol humide optimal pour semis\\
+- Weekend : Temps stable, bon pour germination\\
+\textbf{Recommandation :} Préparer le terrain lundi-mardi, semer jeudi."\\[10pt]
+
+\textbf{Exemple 2 : Alerte préventive}\\
+\textit{Q: "Risques météo pour mon cacao en floraison?"}\\[5pt]
+R: "⚠️ ALERTE - Vents forts prévus (40-50 km/h) demain\\
+Risques : Chute des fleurs, réduction pollinisation\\
+Actions : Installer brise-vents temporaires, vérifier tuteurage\\
+Bonne nouvelle : Humidité favorable (75-80\%) pour développement"
+}
+}
+\caption{Exemples de réponses contextualisées de l'Agent Météo}
+\end{figure}
+
+\subsection{Agent Cultures}
+
+L'Agent Cultures apporte l'expertise agronomique au système, conseillant sur tous les aspects de la production végétale adaptée au contexte camerounais.
+
+\subsubsection{Base de connaissances agricoles}
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{Architecture de la Base de Connaissances}\\[10pt]
+�� Localisation : \texttt{sub\_agents/crops/}\\[10pt]
+\textbf{Structure des données (utils/data.py) :}\\
+• Calendriers culturaux par région\\
+• Fiches techniques par culture\\
+• Associations culturales bénéfiques\\
+• Rotations recommandées\\
+• Variétés adaptées localement\\[10pt]
+\textbf{Sources de connaissances :}\\
+- IRAD (Institut de Recherche Agricole)\\
+- Pratiques traditionnelles validées\\
+- Retours d'expérience terrain\\
+- Publications scientifiques adaptées
+}
+}
+\caption{Organisation des connaissances agricoles}
+\end{figure}
+
+La base de connaissances est structurée de manière hiérarchique, permettant à l'agent de naviguer efficacement des concepts généraux vers des recommandations spécifiques. Le fichier \texttt{data.py} contient des structures de données riches encodant des décennies d'expertise agricole camerounaise.
+
+\subsubsection{Recommandations personnalisées}
+
+L'agent génère des recommandations en croisant multiple facteurs : localisation, type de sol, ressources disponibles, objectifs de l'agriculteur et conditions actuelles. Cette approche holistique assure des conseils pratiques et réalisables.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Système de recommandation (concept)]
+# Pattern de recommandation dans sub_agents/crops/agent.py
+"""
+Le système de recommandation utilise :
+
+1. Filtrage par contexte
+   - Région et zone agro-écologique
+   - Saison et conditions actuelles
+   - Ressources de l'agriculteur
+
+2. Scoring multi-critères
+   - Rentabilité potentielle
+   - Adaptation climatique
+   - Demande du marché
+   - Complexité technique
+
+3. Personnalisation
+   - Niveau d'expérience
+   - Préférences culturales
+   - Contraintes spécifiques
+
+Code complet : sub_agents/crops/tools.py
+Fonction : generate_personalized_recommendations()
+"""
+\end{lstlisting}
+\end{figure}
+
+\subsection{Agent Santé des Plantes}
+
+L'Agent Santé des Plantes agit comme phytopathologiste virtuel, diagnostiquant les problèmes et proposant des solutions intégrées.
+
+\subsubsection{Diagnostic et traitement}
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{Système de Diagnostic Phytosanitaire}\\[10pt]
+�� Localisation : \texttt{sub\_agents/health/}\\[10pt]
+\textbf{Processus de diagnostic :}\\
+1. Analyse des symptômes décrits\\
+2. Corrélation avec conditions environnementales\\
+3. Diagnostic différentiel probabiliste\\
+4. Proposition de tests confirmatoires\\
+5. Plan de traitement intégré\\[10pt]
+\textbf{Base de données (health/data/) :}\\
+• 50+ maladies communes au Cameroun\\
+• 30+ ravageurs majeurs\\
+• Traitements biologiques et chimiques\\
+• Mesures préventives culturales
+}
+}
+\caption{Architecture du système de diagnostic}
+\end{figure}
+
+\subsubsection{Système expert intégré}
+
+L'agent intègre un système expert utilisant des règles de décision basées sur l'expertise phytosanitaire locale. Ce système combine l'approche traditionnelle des systèmes experts avec la flexibilité des LLM.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Intégration système expert (principe)]
+# Concept d'intégration dans sub_agents/health/expert_system.py
+"""
+Le système expert utilise :
+
+- Règles IF-THEN encodant l'expertise locale
+- Chaînage avant pour diagnostic progressif
+- Intégration LLM pour cas ambigus
+- Apprentissage des nouveaux patterns
+
+Exemple de règle :
+IF symptômes = ["taches brunes", "pourriture cabosses"]
+   AND culture = "cacao"
+   AND humidité > 80\%
+THEN maladie = "pourriture brune" (confiance: 0.85)
+
+Code complet avec 100+ règles :
+sub_agents/health/expert_rules.py
+"""
+\end{lstlisting}
+\end{figure}
+
+\subsection{Agent Économique}
+
+L'Agent Économique fournit l'intelligence commerciale nécessaire pour transformer l'agriculture de subsistance en entreprise rentable.
+
+\subsubsection{Analyse de marché}
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{Capacités d'Analyse de Marché}\\[10pt]
+�� Localisation : \texttt{sub\_agents/economic/}\\[10pt]
+\textbf{Fonctionnalités principales :}\\
+• Suivi des prix sur 15+ marchés camerounais\\
+• Analyse des tendances saisonnières\\
+• Prévisions de prix court terme\\
+• Identification opportunités de niche\\
+• Calcul des marges par filière\\[10pt]
+\textbf{Sources de données :}\\
+- Systèmes d'Information des Marchés (SIM)\\
+- Données des coopératives\\
+- Indices régionaux et internationaux\\
+- Crowdsourcing via utilisateurs
+}
+}
+\caption{Système d'analyse économique agricole}
+\end{figure}
+
+\subsubsection{Calculs de rentabilité}
+
+L'agent effectue des analyses financières complètes adaptées au contexte des petits agriculteurs camerounais. Les calculs prennent en compte les spécificités locales comme le travail familial, les systèmes d'entraide et les coûts cachés.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Modèle de calcul économique (aperçu)]
+# Structure dans sub_agents/economic/financial_models.py
+"""
+Modèles de calcul incluant :
+
+1. Coûts de production détaillés
+   - Intrants (semences, engrais, pesticides)
+   - Main d'œuvre (familiale valorisée)
+   - Amortissement équipements
+   - Coûts opportunité
+
+2. Analyse de rentabilité
+   - Marge brute par culture
+   - Retour sur investissement
+   - Seuil de rentabilité
+   - Analyse sensibilité
+
+3. Optimisation du portefeuille cultural
+   - Diversification des risques
+   - Maximisation revenus sous contraintes
+   - Planification trésorerie
+
+Voir : sub_agents/economic/tools.py
+Fonction : calculate_crop_profitability()
+"""
+\end{lstlisting}
+\end{figure}
+
+\subsection{Agent Ressources}
+
+L'Agent Ressources optimise l'utilisation des ressources naturelles et des intrants, promouvant une agriculture durable et efficiente.
+
+\subsubsection{Gestion des ressources}
+
+\begin{figure}[h]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{Système de Gestion des Ressources}\\[10pt]
+�� Localisation : \texttt{sub\_agents/resources/}\\[10pt]
+\textbf{Ressources gérées :}\\
+• \textbf{Sol} : Fertilité, structure, conservation\\
+• \textbf{Eau} : Irrigation, collecte, efficience\\
+• \textbf{Nutriments} : NPK, oligo-éléments, MO\\
+• \textbf{Biodiversité} : Auxiliaires, pollinisateurs\\
+• \textbf{Énergie} : Humaine, animale, mécanique\\[10pt]
+\textbf{Approches promues :}\\
+- Agriculture de conservation\\
+- Agroécologie adaptée\\
+- Économie circulaire\\
+- Intensification durable
+}
+}
+\caption{Périmètre de l'Agent Ressources}
+\end{figure}
+
+\subsubsection{Recommandations d'optimisation}
+
+L'agent génère des plans d'optimisation personnalisés considérant les contraintes et opportunités spécifiques de chaque exploitation.
+
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=Python, caption=Exemple de recommandation intégrée]
+# Pattern de recommandation dans sub_agents/resources/optimizer.py
+"""
+Exemple de sortie pour optimisation eau en saison sèche :
+
+{
+  "diagnostic": {
+    "disponibilité_eau": "limitée - 2000L/semaine",
+    "besoins_cultures": "3500L/semaine optimal",
+    "efficience_actuelle": "40% (irrigation gravitaire)"
+  },
+
+  "plan_optimisation": {
+    "court_terme": [
+      "Paillage organique (économie 30%)",
+      "Irrigation matinale (économie 15%)",
+      "Priorité cultures sensibles"
+    ],
+    "moyen_terme": [
+      "Goutte-à-goutte partiel (ROI 1.5 ans)",
+      "Collecte eau pluie (capacité 10m³)"
+    ],
+    "long_terme": [
+      "Agroforesterie pour microclimat",
+      "Cultures moins exigeantes en eau"
+    ]
+  },
+
+  "impact_estimé": {
+    "économie_eau": "55%",
+    "augmentation_rendement": "25%",
+    "réduction_coûts": "15000 FCFA/saison"
+  }
+}
+
+Code complet : sub_agents/resources/tools.py
+"""
+\end{lstlisting}
+\end{figure}
+
+Cette approche modulaire avec des agents spécialisés permet au système Agriculture Cameroun d'offrir une expertise complète tout en maintenant la flexibilité nécessaire pour s'adapter aux besoins variés des agriculteurs camerounais.

@@ -1,0 +1,107 @@
+% Packages and document configurations.
+\documentclass[en]{IPLeiriaThesis}
+\usepackage{microtype}
+
+% Document variables.
+\input{Variables/Variables}
+
+% Loading of the glossary and acronyms.
+\makeglossaries
+\loadglsentries{Matter/04-Glossary}
+\loadglsentries[\acronymtype]{Matter/05-Acronyms}
+
+\begin{document}
+
+% Front matter.
+% \include{Matter/00-Cover}
+% \include{Matter/01-FPage}
+
+% Roman numeration.
+\pagenumbering{roman}
+
+% Declaration of authorship.
+% \include{Matter/02-Declaration}
+
+% Acknowledgements.
+% \include{Matter/03-Acknowledgements}
+
+% Abstract.
+% \include{Chapters/00-Abstract}
+
+% List of contents, figures, and tables.
+\tcbset{
+    definition/.style={
+        colback=blue!5,
+        colframe=blue!75!black,
+        fonttitle=\bfseries,
+        title={Définition:}
+    },
+    theorem/.style={
+        colback=green!5,
+        colframe=green!75!black,
+        fonttitle=\bfseries,
+        title={Théorème:}
+    },
+    example/.style={
+        colback=orange!5,
+        colframe=orange!75!black,
+        fonttitle=\bfseries,
+        title={Exemple:}
+    }
+}
+
+\lstdefinestyle{mystyle}{
+    language=Java,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    breaklines=true,
+    tabsize=4
+}
+
+% Appliquer le style à tous les listings
+\lstset{style=mystyle}
+
+% Mots-clés personnalisés pour vos structures
+\lstset{morekeywords={STRUCTURE, FIN, LISTE_ALTERNÉE, ÉTAT, ACTION, LISTE_DE_PAIRES, CHAÎNE, PERCEPTION, ENVIRONNEMENT, N-UPLET, FONCTION, ENUM, DICTIONNAIRE}}
+
+\tableofcontents
+\listoffigures
+\listoflistings
+% \listoftables
+\newpage
+
+% Print glossary and acronyms.
+% \printglossary\plainblankpage
+% \printglossary[type=\acronymtype]\plainblankpage
+
+% Arabic numeration.
+\pagenumbering{arabic}
+
+% Chapters.
+\include{Chapters/abbreviations}
+\include{Chapters/Introduction}
+\include{Chapters/CONCEPTS-FONDAMENTAUX-DES-SYSTEMES-MULTI-AGENTS}
+\include{Chapters/PRÉSENTATION-DU-PROJET-AGRICULTURE-CAMEROUN}
+\include{Chapters/ENVIRONNEMENT-DE-DÉVELOPPEMENT}
+% \include{Chapters/IMPLÉMENTATION-AVEC-GOOGLE-ADK}
+\include{Chapters/INTÉGRATION-ET-DÉPLOIEMENT}
+\include{Chapters/Conclusion}
+\include{Matter/RÉFÉRENCES }
+\include{Matter/07-Annexes}
+
+
+% Bibliography.
+\printbibliography
+
+
+
+
+\end{document}

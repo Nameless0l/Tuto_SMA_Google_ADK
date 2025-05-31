@@ -1,0 +1,375 @@
+# =============================================================================
+# .gitignore pour projet LaTeX avec minted, biblatex, et classe personnalisée
+# =============================================================================
+
+# Fichiers de sortie principaux (garder seulement le PDF final si nécessaire)
+*.pdf
+*.ps
+*.dvi
+
+# Fichiers auxiliaires LaTeX
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+*.lb
+*.idx
+*.ilg
+*.ind
+*.inx
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*.synctex.gz
+*.synctex(busy)
+*.pdfsync
+*.nav
+*.snm
+*.vrb
+*.fdb_latexmk
+*.fls
+*.makefile
+*.maf
+*.mtc*
+*.slf*
+*.slt*
+*.stc*
+
+# Fichiers de numérotation
+*.figlist
+*.makefile
+*.figlist
+*.makefile
+
+# Fichiers temporaires d'édition
+*~
+*.tmp
+*.bak
+*.swp
+*.swo
+*~$
+
+# Fichiers Biber/BibLaTeX
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+
+# Fichiers glossaires et acronymes
+*.acn
+*.acr
+*.glg
+*.glo
+*.gls
+*.glsdefs
+*.ist
+*.xdy
+
+# Fichiers minted (coloration syntaxique)
+_minted-*/
+*.pyg
+*.pygstyle
+
+# Fichiers de cache Python (pour minted)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Fichiers Tikz/PGF
+*.auxlock
+*.figlist
+*.fdb_latexmk
+*.fls
+*.log
+*.makefile
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+
+# Fichiers d'index
+*.idx
+*.ilg
+*.ind
+
+# Fichiers de références croisées
+*.auxlock
+
+# Fichiers de compilation XeLaTeX/LuaLaTeX
+*.xdv
+
+# Fichiers de package custom
+*.cls.backup
+*.sty.backup
+
+# Fichiers d'éditeurs
+# VS Code
+.vscode/
+*.code-workspace
+
+# TeXstudio
+*.txss
+
+# TeXworks
+*.synctex.gz(busy)
+
+# Kile
+*.kilepr
+
+# WinEdt
+*.bak
+*.sav
+
+# TeXnicCenter
+*.tcp
+*.tps
+
+# Fichiers système
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux
+*~
+.directory
+
+# Fichiers de log spécifiques au projet
+*.makeindex
+*.nlg
+*.nlo
+*.nls
+
+# Fichiers temporaires de compilation
+*.auxlock
+*.cut
+*.def
+*.dpth
+*.ent
+*.eledsec*
+*.end
+*.figlist
+*.fin
+*.fot
+*.makefile
+*.mw
+*.newpax
+*.pyc
+*.pytxcode
+*.listing
+*.lol
+
+# Fichiers de sauvegarde automatique
+auto/
+*-blx.bib
+*-concordance.tex
+*.figlist
+*.eledsec*
+*.end
+*.fot
+
+# Fichiers spécifiques à certains packages
+# algorithmicx
+*.alg
+*.loa
+
+# achemso
+acs-*.bib
+
+# amsthm
+*.thm
+
+# beamer
+*.nav
+*.pre
+*.snm
+*.vrb
+
+# changes
+*.soc
+
+# comment
+*.cut
+
+# cprotect
+*.cpt
+
+# elsarticle
+*.spl
+
+# endnotes
+*.ent
+
+# fixme
+*.lox
+
+# feynmf/feynmp
+*.mf
+*.mp
+*.t[1-9]
+*.t[1-9][0-9]
+*.tfm
+
+# forest
+*.fls
+*.fdb_latexmk
+
+# glossaries
+*.glstex
+
+# gnuplottex
+*-gnuplottex-*
+
+# gregoriotex
+*.gaux
+*.gtex
+
+# htlatex
+*.4ct
+*.4tc
+*.idv
+*.lg
+*.trc
+*.xref
+
+# hyperref
+*.brf
+
+# knitr
+*-concordance.tex
+
+# listings
+*.lol
+
+# luatexja-ruby
+*.ltjruby
+
+# makeidx
+*.idx
+*.ilg
+*.ind
+
+# minitoc
+*.maf
+*.mlf
+*.mlt
+*.mtc[0-9]*
+*.slf[0-9]*
+*.slt[0-9]*
+*.stc[0-9]*
+
+# minted
+_minted*
+*.pyg
+
+# morewrites
+*.mw
+
+# nomencl
+*.nlg
+*.nlo
+*.nls
+
+# pax
+*.pax
+
+# pdfpcnotes
+*.pdfpc
+
+# sagetex
+*.sagetex.sage
+*.sagetex.py
+*.sagetex.scmd
+
+# scrwfile
+*.wrt
+
+# sympy
+*.upa
+*.upb
+
+# pdfcomment
+*.upa
+*.upb
+
+# pythontex
+*.pytxcode
+pythontex-files-*/
+
+# tcolorbox
+*.listing
+
+# thmtools
+*.loe
+
+# TikZ & PGF
+*.auxlock
+*.eledsec*
+*.end
+*.fot
+*.figlist
+*.makefile
+
+# titletoc
+*.ptc
+
+*.tdo
+
+# vhistory
+*.hst
+*.ver
+
+# easy-todo
+*.lod
+
+# xcolor
+*.xcp
+
+# xmpincl
+*.xmpi
+
+# xindy
+*.xdy
+
+# xypic
+*.xyc
+
+# endfloat
+*.ttt
+*.fff
+
+# Latexian
+TSWLatexianTemp*
+
+*.tdo
+
+*-concordance.tex
+*.tikz
+*-tikzDictionary
+
+# listings
+*.lol
+
+# floatrow
+*.frm
+
+# natbib
+*.bst
