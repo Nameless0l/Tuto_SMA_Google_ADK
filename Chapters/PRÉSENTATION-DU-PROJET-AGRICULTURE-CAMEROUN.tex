@@ -168,19 +168,17 @@ L'Agent Coordinateur implémente également des \emph{mécanismes d'apprentissag
 \label{fig:architecture}
 \end{figure}
 
-Le diagramme d'architecture présenté dans la Figure \ref{fig:architecture} illustre l'organisation hiérarchique du système Agriculture Cameroun selon une structure en arbre descendant. Au sommet, l'Agriculteur représente l'utilisateur final du système, point d'entrée unique pour toutes les interactions. Cette représentation souligne l'approche centrée utilisateur du système, conçu spécifiquement pour les producteurs agricoles camerounais.
+Le diagramme d'architecture présenté dans la Figure \ref{fig:architecture} illustre l'organisation hiérarchique du système Agriculture Cameroun selon une structure en arbre descendant. Au sommet, l'Agriculteur représente l'utilisateur final du système, point d'entrée unique pour toutes les interactions.
 
-L'Interface Web constitue la couche de présentation, offrant une interface intuitive et accessible via navigateur web. Cette interface traduit les requêtes utilisateur en formats structurés et présente les réponses des agents de manière claire et actionnable. Son positionnement direct sous l'utilisateur illustre son rôle de pont entre l'humain et le système multi-agents.
+L'Interface Web constitue la couche de présentation, elle traduit les requêtes utilisateur en formats structurés et présente les réponses des agents de manière claire et actionnable. Son positionnement direct sous l'utilisateur illustre son rôle de pont entre l'humain et le système multi-agents.
 
-L'Agent Principal Coordinateur occupe une position centrale stratégique dans l'architecture. Représenté par l'icône robot avec le sous-titre "Coordinateur", il incarne le cerveau du système, responsable de l'orchestration de tous les agents spécialisés. Les connexions directes descendantes vers les cinq agents spécialisés illustrent sa capacité de routage intelligent et de coordination des requêtes complexes.
+L'Agent Principal Coordinateur occupe une position centrale stratégique dans l'architecture. Représenté par l'icône robot, il incarne le cerveau du système, responsable de l'orchestration de tous les agents spécialisés. Les connexions directes descendantes vers les cinq agents spécialisés illustrent sa capacité de routage intelligent et de coordination des requêtes complexes.
 
 Les cinq agents spécialisés sont organisés horizontalement sous l'Agent Principal, chacun identifié par une icône métier distinctive. L'Agent Météorologique gère les prévisions et analyses climatiques. L'Agent Cultures traite les questions liées aux variétés, plantations et cycles agricoles. L'Agent Santé des Plantes se spécialise dans le diagnostic et le traitement des maladies. L'Agent Économique  analyse la rentabilité et les tendances de marché. L'Agent Ressources optimise la gestion de l'eau, du sol et des intrants.
 
 La couche externe du diagramme présente l'écosystème de données et services. Chaque agent spécialisé maintient des connexions dédiées vers ses sources d'information : l'Agent Météorologique se connecte à l'OpenWeather API, l'Agent Économique aux Market Data API , tandis que les autres agents accèdent à des bases de données spécialisées représentées par des cylindres : Base Maladies, Base Cultures , et Soil Data API .
 
 L'intégration du LLM Gemini constitue un élément architectural innovant. Connecté à l'Agent Principal et aux cinq agents spécialisés, Gemini enrichit le système de capacités de traitement du langage naturel et de raisonnement avancé, permettant des analyses contextuelles sophistiquées et des réponses en langage naturel.
-
-Les flux de communication inter-agents, représentés par des lignes pointillées annotées, illustrent la capacité de collaboration directe entre agents. Les connexions "Coordination" et "Synthèse" depuis l'Agent Principal, ainsi que les échanges "Données croisées", "Prévisions" et "Prix/Coûts" entre agents spécialisés, démontrent l'intelligence distribuée du système et sa capacité d'optimisation collaborative.
 
 
 \section{Scénarios d'Interaction}
