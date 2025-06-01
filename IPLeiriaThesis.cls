@@ -553,3 +553,13 @@
     {[}{{{\color{black}{[}}}}{1}
     {]}{{{\color{black}{]}}}}{1}
 }
+
+\newenvironment{breakablecode}[1][]{%
+    \ifthenelse{\equal{#1}{}}{}{%
+        \vspace{0.5em}%
+        \textbf{Listing: #1}%
+        \vspace{0.2em}%
+    }%
+}{%
+    \vspace{0.5em}%
+}
