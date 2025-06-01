@@ -3,7 +3,6 @@
 # =============================================================================
 
 # Fichiers de sortie principaux (garder seulement le PDF final si nécessaire)
-*.pdf
 *.ps
 *.dvi
 

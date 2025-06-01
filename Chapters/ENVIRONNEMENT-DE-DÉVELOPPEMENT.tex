@@ -51,24 +51,15 @@ La \textbf{gestion des environnements virtuels} est cruciale pour maintenir l'is
 \subsection{Installation de Python 3.12+}
 
 L'installation de Python constitue la première étape cruciale dans la configuration de l'environnement de développement. La procédure varie selon le système d'exploitation, mais l'objectif reste constant : obtenir une installation Python moderne et correctement configurée.
-
 \subsubsection{Installation sur Windows}
 
-Pour les utilisateurs Windows, l'installation de Python nécessite une attention particulière pour assurer une configuration optimale. Commencez par naviguer vers le site officiel Python à l'adresse \texttt{python.org/downloads}. Le site détecte automatiquement votre système d'exploitation et propose la dernière version stable de Python compatible.
+Pour les utilisateurs Windows, l'installation de Python nécessite une attention particulière pour assurer une configuration optimale. Commencez par naviguer vers le site officiel Python à l'adresse \texttt{\href{https://www.python.org/downloads/}{python.org/downloads}}. Le site détecte automatiquement votre système d'exploitation et propose la dernière version stable de Python compatible.
 
 Téléchargez l'installateur Windows 64-bit (ou 32-bit selon votre système). Lors du lancement de l'installateur, l'écran d'accueil présente une option cruciale : \textbf{"Add Python to PATH"}. Il est impératif de cocher cette case avant de procéder à l'installation. Cette action permet d'accéder à Python depuis n'importe quel répertoire dans l'invite de commandes, évitant de nombreux problèmes de configuration ultérieurs.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-\framebox[0.9\textwidth]{
-\parbox{0.85\textwidth}{
-\centering
-\textbf{Capture d'écran : Installation Python sur Windows}\\[10pt]
-L'installateur Python affiche l'option "Add Python 3.12 to PATH" en bas de la fenêtre.\\
-Cette case DOIT être cochée avant de cliquer sur "Install Now".\\[10pt]
-La barre de progression montre l'installation des composants Python.
-}
-}
+\includegraphics[width=0.95\textwidth]{images/python_installation.png}
 \caption{Interface d'installation Python sur Windows}
 \end{figure}
 
@@ -80,12 +71,12 @@ Sur macOS, plusieurs options d'installation s'offrent aux développeurs. La mét
 
 Avec Homebrew installé, l'installation de Python devient remarquablement simple. Exécutez \texttt{brew install python@3.12} dans Terminal. Homebrew gère automatiquement les dépendances, configure les liens symboliques appropriés et assure que Python est accessible globalement. Cette méthode présente l'avantage de faciliter les mises à jour futures via \texttt{brew upgrade python@3.12}.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
 \centering
-\textbf{Capture d'écran : Installation Python via Homebrew sur macOS}\\[10pt]
+\textbf{Installation Python via Homebrew sur macOS}\\[10pt]
 Terminal affiche :\\
 \texttt{\$ brew install python@3.12}\\
 \texttt{==> Downloading python@3.12...}\\
@@ -105,12 +96,12 @@ Les systèmes Linux offrent généralement Python préinstallé, mais souvent da
 
 Pour les distributions basées sur \textbf{Ubuntu/Debian}, utilisez le système de gestion de packages APT. Commencez par ajouter le PPA deadsnakes qui fournit les versions récentes de Python : \texttt{sudo add-apt-repository ppa:deadsnakes/ppa}. Mettez à jour la liste des packages avec \texttt{sudo apt update}, puis installez Python avec \texttt{sudo apt install python3.12 python3.12-venv python3.12-dev}. L'inclusion des packages venv et dev est importante pour le support complet des environnements virtuels et la compilation d'extensions.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
 \centering
-\textbf{Capture d'écran : Installation Python sur Ubuntu}\\[10pt]
+\textbf{Installation Python sur Ubuntu}\\[10pt]
 Terminal affiche :\\
 \texttt{\$ sudo add-apt-repository ppa:deadsnakes/ppa}\\
 \texttt{\$ sudo apt update}\\
@@ -130,7 +121,7 @@ Pour les distributions basées sur \textbf{Fedora/Red Hat}, utilisez DNF ou YUM 
 
 L'installation de Poetry utilise un script d'installation officiel qui détecte automatiquement votre système et configure Poetry de manière optimale. Sur \textbf{macOS et Linux}, ouvrez un terminal et exécutez la commande curl pour télécharger et exécuter le script d'installation. Le script crée un répertoire Poetry dans votre dossier home, installe Poetry de manière isolée et configure votre shell pour inclure Poetry dans le PATH.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -157,9 +148,14 @@ Poetry offre des fonctionnalités avancées qui simplifient significativement le
 
 \textbf{Git} constitue l'outil fondamental pour la gestion de versions et la collaboration sur le projet Agriculture Cameroun. Son installation correcte et sa configuration appropriée sont essentielles pour contribuer efficacement au projet.
 
-Sur \textbf{Windows}, Git pour Windows (Git Bash) fournit non seulement Git mais aussi un environnement shell Unix-like précieux. Téléchargez l'installateur depuis \texttt{git-scm.com} et lancez-le. Durant l'installation, plusieurs choix importants se présentent. Pour l'éditeur par défaut, sélectionnez votre éditeur préféré (VS Code est recommandé si installé). Pour l'ajustement du PATH, choisissez "Git from the command line and also from 3rd-party software" pour une intégration maximale. Pour les fins de ligne, sélectionnez "Checkout Windows-style, commit Unix-style line endings" pour assurer la compatibilité multiplateforme.
+Sur \textbf{Windows}, Git pour Windows (Git Bash) fournit non seulement Git mais aussi un environnement shell Unix-like précieux. Téléchargez l'installateur depuis \texttt{\href{https://git-scm.com/download/win}{git-scm.com}} et lancez-le. Durant l'installation, plusieurs choix importants se présentent. 
+\begin{itemize}
+    \item Pour l'éditeur par défaut, sélectionnez votre éditeur préféré (VS Code est recommandé si installé). Pour l'ajustement du PATH, choisissez "Git from the command line and also from 3rd-party software" pour une intégration maximale.
+    \item Pour le terminal, optez pour "Use MinTTY (the default terminal of MSYS2)" pour une expérience de ligne de commande améliorée.
+    \item Pour la gestion des fins de ligne, sélectionnez "Checkout Windows-style, commit Unix-style line endings" pour assurer la compatibilité multiplateforme.
+\end{itemize}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -176,7 +172,7 @@ Options critiques durant l'installation :\\[5pt]
 \caption{Options d'installation recommandées pour Git sur Windows}
 \end{figure}
 
-Sur \textbf{macOS}, Git peut être installé via Homebrew avec \texttt{brew install git} ou via les Xcode Command Line Tools avec \texttt{xcode-select --install}. La méthode Homebrew est préférée car elle facilite les mises à jour futures et installe la version la plus récente de Git.
+Sur \textbf{macOS}, Git peut être installé via Homebrew avec \texttt{\textbf{brew install git}} ou via les Xcode Command Line Tools avec \textbf{\textit{xcode-select --install}}. La méthode Homebrew est préférée car elle facilite les mises à jour futures et installe la version la plus récente de Git.
 
 Sur \textbf{Linux}, Git est disponible dans les dépôts officiels de toutes les distributions majeures. Pour Ubuntu/Debian, utilisez \texttt{sudo apt install git}. Pour Fedora, \texttt{sudo dnf install git}. Ces commandes installent Git avec toutes ses dépendances et outils associés.
 
@@ -190,7 +186,7 @@ L'accès à l'API Google Gemini constitue le cœur de l'intelligence du système
 
 Pour obtenir une clé API Gemini, naviguez vers \texttt{makersuite.google.com/app/apikey}. Connectez-vous avec votre compte Google et créez un nouveau projet si nécessaire. Google AI Studio propose un généreux quota gratuit suffisant pour le développement et les tests. Cliquez sur "Create API Key" et copiez immédiatement la clé générée dans un endroit sûr - elle ne sera plus affichée après fermeture de la fenêtre.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -221,51 +217,157 @@ La \textbf{validation de la configuration} peut être effectuée en exécutant l
 
 La structure du projet Agriculture Cameroun reflète une architecture modulaire soigneusement conçue pour faciliter la navigation, la maintenance et l'extension du système. Cette organisation hiérarchique sépare clairement les responsabilités tout en maintenant une cohésion logique entre les composants.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-\framebox[0.9\textwidth]{
-\parbox{0.85\textwidth}{
-\small
-\texttt{agriculture/}\\
-\texttt{├── agent.py \hfill \# Agent coordinateur principal}\\
-\texttt{├── prompts.py \hfill \# Templates et instructions}\\
-\texttt{├── tools.py \hfill \# Outils de communication}\\
-\texttt{├── config.py \hfill \# Configuration centrale}\\
-\texttt{├── sub\_agents/ \hfill \# Agents spécialisés}\\
-\texttt{│   ├── weather/ \hfill \# Agent météorologique}\\
-\texttt{│   │   ├── agent.py}\\
-\texttt{│   │   ├── prompts.py}\\
-\texttt{│   │   └── tools.py}\\
-\texttt{│   ├── crops/ \hfill \# Agent cultures}\\
-\texttt{│   ├── health/ \hfill \# Agent santé des plantes}\\
-\texttt{│   ├── economic/ \hfill \# Agent économique}\\
-\texttt{│   └── resources/ \hfill \# Agent ressources}\\
-\texttt{├── utils/ \hfill \# Utilitaires partagés}\\
-\texttt{│   ├── data.py \hfill \# Données agricoles}\\
-\texttt{│   ├── validators.py \hfill \# Validation des entrées}\\
-\texttt{│   └── helpers.py \hfill \# Fonctions auxiliaires}\\
-\texttt{├── tests/ \hfill \# Suite de tests}\\
-\texttt{│   ├── unit/ \hfill \# Tests unitaires}\\
-\texttt{│   ├── integration/ \hfill \# Tests d'intégration}\\
-\texttt{│   └── fixtures/ \hfill \# Données de test}\\
-\texttt{└── docs/ \hfill \# Documentation}\\
-\texttt{    ├── api/ \hfill \# Documentation API}\\
-\texttt{    ├── guides/ \hfill \# Guides utilisateur}\\
-\texttt{    └── architecture/ \hfill \# Docs techniques}
+\fbox{
+\begin{minipage}{0.9\textwidth}
+\footnotesize
+\begin{forest}
+for tree={
+    font=\ttfamily,
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    edge path={
+        \noexpand\path [draw, \forestoption{edge}]
+        (!u.south west) +(7.5pt,0) |- (.child anchor)\forestoption{edge label};
+    },
+    before typesetting nodes={
+        if n=1
+            {insert before={[,phantom]}}
+            {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
 }
+[agriculture\_cameroun/ \textcolor{gray}{\textit{Package principal}}
+    [\_\_init\_\_.py \textcolor{gray}{\textit{Init package}}]
+    [agent.py \textcolor{gray}{\textit{Agent coordinateur}}]
+    [prompts.py \textcolor{gray}{\textit{Instructions}}]
+    [tools.py \textcolor{gray}{\textit{Communication}}]
+    [config.py \textcolor{gray}{\textit{Configuration}}]
+    [sub\_agents/ \textcolor{gray}{\textit{Agents spécialisés}}
+        [\_\_init\_\_.py \textcolor{gray}{\textit{Exports}}]
+        [weather/ \textcolor{gray}{\textit{Météorologique}}
+            [\_\_init\_\_.py]
+            [agent.py \textcolor{gray}{\textit{Logique météo}}]
+            [prompts.py \textcolor{gray}{\textit{Instructions}}]
+            [tools.py \textcolor{gray}{\textit{Outils météo}}]
+        ]
+        [crops/ \textcolor{gray}{\textit{Cultures}}
+            [\_\_init\_\_.py]
+            [agent.py]
+            [prompts.py]
+            [tools.py]
+        ]
+        [health/ \textcolor{gray}{\textit{Santé plantes}}
+            [\_\_init\_\_.py]
+            [agent.py]
+            [prompts.py]
+            [tools.py]
+        ]
+        [economic/ \textcolor{gray}{\textit{Économique}}
+            [\_\_init\_\_.py]
+            [agent.py]
+            [prompts.py]
+            [tools.py]
+        ]
+        [resources/ \textcolor{gray}{\textit{Ressources}}
+            [\_\_init\_\_.py]
+            [agent.py]
+            [prompts.py]
+            [tools.py]
+        ]
+    ]
+    [utils/ \textcolor{gray}{\textit{Utilitaires}}
+        [\_\_init\_\_.py]
+        [data.py \textcolor{gray}{\textit{Données agricoles}}]
+        [utils.py \textcolor{gray}{\textit{Fonctions auxiliaires}}]
+    ]
+    [tests/ \textcolor{gray}{\textit{Tests}}
+        [\_\_init\_\_.py]
+        [test\_agents.py \textcolor{gray}{\textit{Tests agents}}]
+    ]
+]
+\end{forest}
+\end{minipage}
 }
-\caption{Structure hiérarchique du projet Agriculture Cameroun}
+\caption{Structure réelle du projet Agriculture Cameroun avec Google ADK}
+\label{fig:agriculture_structure_real}
+\end{figure}
+\begin{figure}[H]
+\centering
+\fbox{
+\begin{minipage}{0.9\textwidth}
+\footnotesize
+\begin{forest}
+for tree={
+    font=\ttfamily,
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    edge path={
+        \noexpand\path [draw, \forestoption{edge}]
+        (!u.south west) +(7.5pt,0) |- (.child anchor)\forestoption{edge label};
+    },
+    before typesetting nodes={
+        if n=1
+            {insert before={[,phantom]}}
+            {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+}
+[projet\_racine/ \textcolor{gray}{\textit{Dossier racine}}
+    [agriculture\_cameroun/ \textcolor{gray}{\textit{Package principal}}
+        [examples/ \textcolor{gray}{\textit{Exemples}}
+            [demo\_cli.py \textcolor{gray}{\textit{Demo CLI}}]
+            [usage\_examples.py \textcolor{gray}{\textit{Exemples pratiques}}]
+        ]
+    ]
+    [deployment/ \textcolor{gray}{\textit{Déploiement}}
+        [\_\_init\_\_.py]
+        [deploy.py]
+    ]
+    [.env.example \textcolor{gray}{\textit{Template config}}]
+    [.gitignore \textcolor{gray}{\textit{Git ignore}}]
+    [pyproject.toml \textcolor{gray}{\textit{Config Poetry}}]
+    [Dockerfile \textcolor{gray}{\textit{Container Docker}}]
+    [docker-compose.yml \textcolor{gray}{\textit{Multi-services}}]
+    [setup.sh \textcolor{gray}{\textit{Install Linux/macOS}}]
+    [setup.ps1 \textcolor{gray}{\textit{Install Windows}}]
+    [README.md \textcolor{gray}{\textit{Doc principale}}]
+    [INSTALLATION.md \textcolor{gray}{\textit{Guide install}}]
+    [QUICKSTART.md \textcolor{gray}{\textit{Démarrage 5min}}]
+    [USER\_GUIDE.md \textcolor{gray}{\textit{Guide utilisateur}}]
+    [API\_DOCUMENTATION.md \textcolor{gray}{\textit{Doc API REST}}]
+    [CONTRIBUTING.md \textcolor{gray}{\textit{Guide contribution}}]
+    [FAQ.md \textcolor{gray}{\textit{Questions FAQ}}]
+    [LICENSE \textcolor{gray}{\textit{Licence Apache 2.0}}]
+]
+\end{forest}
+\end{minipage}
+}
+\caption{Structure complète du projet avec fichiers de configuration et documentation}
+\label{fig:agriculture_structure_complete}
 \end{figure}
 
-Le \textbf{répertoire racine} contient les fichiers principaux du système. Le fichier \texttt{agent.py} implémente l'Agent Coordinateur Principal, point d'entrée de toutes les interactions utilisateur. Ce fichier orchestral définit la logique de routage vers les agents spécialisés et la synthèse des réponses. Le fichier \texttt{prompts.py} centralise tous les templates et instructions utilisés par l'agent principal, facilitant la maintenance et l'adaptation des comportements. Le fichier \texttt{tools.py} définit les outils de communication et d'interface entre l'agent principal et les sous-agents.
 
-Le \textbf{répertoire sub\_agents} constitue le cœur fonctionnel du système, hébergeant les cinq agents spécialisés. Chaque agent dispose de son propre sous-répertoire suivant une structure cohérente. Cette standardisation facilite la compréhension du code et permet l'ajout de nouveaux agents en suivant le même pattern. Chaque répertoire d'agent contient au minimum trois fichiers : \texttt{agent.py} pour la logique principale, \texttt{prompts.py} pour les instructions spécifiques, et \texttt{tools.py} pour les outils métier de l'agent.
+Le \textbf{répertoire racine} contient les composants principaux du système. Le fichier \texttt{agent.py} implémente l'agent coordinateur qui route les requêtes vers les agents spécialisés. Le fichier \texttt{prompts.py} centralise les instructions de l'agent principal, tandis que \texttt{tools.py} définit les outils de communication inter-agents. Le fichier \texttt{config.py} gère la configuration globale et les modèles de données.
 
-Le \textbf{répertoire utils} regroupe les fonctionnalités transversales utilisées par plusieurs composants du système. Le fichier \texttt{data.py} est particulièrement important, contenant toutes les données agricoles spécifiques au Cameroun : régions, cultures, calendriers, prix de référence. Cette centralisation des données facilite leur mise à jour et assure la cohérence à travers le système. Les validateurs dans \texttt{validators.py} garantissent l'intégrité des données entrantes, tandis que \texttt{helpers.py} fournit des fonctions utilitaires réutilisables.
+Le \textbf{répertoire sub\_agents} héberge les cinq agents spécialisés : \textit{weather} (météorologie), \textit{crops} (cultures), \textit{health} (santé des plantes), \textit{economic} (économie) et \textit{resources} (ressources). Chaque agent suit une structure standardisée avec trois fichiers : \texttt{agent.py} (logique principale), \texttt{prompts.py} (instructions spécialisées) et \texttt{tools.py} (outils métier).
 
-Le \textbf{répertoire tests} implémente une stratégie de test comprehensive. La séparation entre tests unitaires et tests d'intégration permet une exécution ciblée selon les besoins. Les fixtures fournissent des données de test réalistes et reproductibles. Cette organisation supporte une approche de développement dirigé par les tests (TDD) et facilite l'intégration continue.
+Le \textbf{répertoire utils} contient les utilitaires partagés. Le fichier \texttt{data.py} centralise les données agricoles camerounaises (régions, cultures, prix, calendriers), tandis que \texttt{utils.py} fournit les fonctions auxiliaires communes au système.
 
-Le \textbf{répertoire docs} maintient une documentation riche et structurée. La documentation API générée automatiquement à partir des docstrings cohabite avec des guides pratiques écrits manuellement. Les diagrammes d'architecture dans le sous-répertoire dédié utilisent des formats textuels (comme PlantUML) pour rester versionnables et facilement modifiables.
+Le \textbf{répertoire tests} implémente les tests du système avec \texttt{test\_agents.py} pour les tests unitaires des agents.
+
+Le \textbf{répertoire examples} propose des démonstrations pratiques avec \texttt{demo\_cli.py} (interface ligne de commande interactive) et \texttt{usage\_examples.py} (exemples d'utilisation programmatique).
+
+La \textbf{documentation} comprend plusieurs guides : \texttt{README.md} (présentation générale), \texttt{INSTALLATION.md} (installation détaillée), \texttt{QUICKSTART.md} (démarrage rapide), \texttt{USER\_GUIDE.md} (guide utilisateur) et \texttt{API\_DOCUMENTATION.md} (documentation de l'API REST).
 
 \subsection{Fichiers de configuration importants}
 
@@ -273,7 +375,7 @@ Les fichiers de configuration du projet Agriculture Cameroun orchestrent le comp
 
 Le fichier \textbf{pyproject.toml} sert de manifeste central pour le projet. Ce fichier moderne remplace les traditionnels \texttt{setup.py} et \texttt{requirements.txt}, centralisant toutes les métadonnées du projet. Il définit le nom du projet, sa version, sa description et ses auteurs. La section \texttt{[tool.poetry.dependencies]} liste toutes les dépendances avec leurs contraintes de version, assurant la reproductibilité des installations. La section \texttt{[tool.poetry.dev-dependencies]} sépare clairement les outils de développement des dépendances de production. Les configurations des outils de développement (pytest, black, mypy) sont également centralisées ici, créant une source unique de vérité pour la configuration du projet.
 
-% \begin{figure}[h]
+% \begin{figure}[H]
 % \centering
 % \framebox[0.9\textwidth]{
 % \parbox{0.85\textwidth}{
@@ -315,7 +417,7 @@ La \textbf{structure des imports} suit un ordre strict pour améliorer la lisibi
 
 Les \textbf{docstrings} constituent une exigence non négociable pour toutes les fonctions publiques, classes et modules. Le format Google-style est adopté pour sa lisibilité et sa compatibilité avec les outils de documentation automatique. Chaque docstring inclut une description concise, la documentation des paramètres avec leurs types, la valeur de retour et ses types, et les exceptions potentielles. Les exemples d'utilisation sont encouragés pour les fonctions complexes.
 
-% \begin{figure}[h]
+% \begin{figure}[H]
 % \centering
 % \framebox[0.9\textwidth]{
 % \parbox{0.85\textwidth}{

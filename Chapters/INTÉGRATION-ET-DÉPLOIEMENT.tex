@@ -7,32 +7,65 @@
 
 Google ADK révolutionne la création d'interfaces utilisateur pour les systèmes multi-agents en fournissant une interface web moderne et réactive out-of-the-box. Cette interface, basée sur les dernières technologies web, offre une expérience utilisateur fluide et intuitive parfaitement adaptée aux besoins des agriculteurs camerounais.
 
-\begin{figure}[h]
+• Selection de l'agent\\
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
-\parbox{0.85\textwidth}{
+\parbox{0.9\textwidth}{
 \centering
 \textbf{Interface Web Agriculture Cameroun}\\[10pt]
-% \includegraphics[width=0.9\textwidth]{[Interface principale montrant]}\\[5pt]
-• Barre de chat intuitive en bas\\
-• Historique des conversations à gauche\\
-• Zone de réponse principale au centre\\
-• Suggestions de questions fréquentes\\
-• Indicateur d'agent actif en temps réel\\[10pt]
-URL d'accès : \texttt{http://localhost:8000}\\
-Responsive design adapté mobile/desktop
+\includegraphics[width=0.9\textwidth]{images/interface_principale.png}\\[5pt]
 }
 }
 \caption{Interface web principale du système}
 \end{figure}
 
-L'interface web ADK est automatiquement générée lors du lancement du système avec la commande \texttt{adk web}. Cette approche zero-configuration permet de démarrer immédiatement sans configuration complexe d'interface.
+• Barre de chat intuitive en bas\\
+\begin{figure}[H]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.9\textwidth}{
+\centering
+\textbf{Interface Web Agriculture Cameroun}\\[10pt]
+\includegraphics[width=0.9\textwidth]{images/interface_principale_1.png}\\[5pt]
+}
+}
+\caption{Interface web principale du système}
+\end{figure}
 
-\begin{figure}[h]
+• Zone de réponse principale au centre\\
+\begin{figure}[H]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.9\textwidth}{
+\centering
+\textbf{Interface Web Agriculture Cameroun}\\[10pt]
+\includegraphics[width=0.9\textwidth]{images/interface_principale_2.png}\\[5pt]
+}
+}
+\caption{Interface web principale du système}
+\end{figure}
+• Indicateur d'agent actif en temps réel\\[10pt]
+\begin{figure}[H]
+\centering
+\framebox[0.9\textwidth]{
+\parbox{0.9\textwidth}{
+\centering
+\textbf{Interface Web Agriculture Cameroun}\\[10pt]
+\includegraphics[width=0.9\textwidth]{images/interface_principale_3.png}\\[5pt]
+}
+}
+\caption{Interface web principale du système}
+\end{figure}
+• URL d'accès : \texttt{http://localhost:8000}\\
+• Responsive design adapté mobile/desktop
+
+L'interface web ADK est automatiquement générée lors du lancement du système avec la commande \texttt{poetry run adk web}. Cette approche zero-configuration permet de démarrer immédiatement sans configuration complexe d'interface.
+
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Configuration de l'interface web ADK]
 # Configuration dans agent.py pour personnaliser l'interface
-# Le code complet est dans : agriculture/agent.py
 
 # Configuration des métadonnées d'interface
 INTERFACE_CONFIG = {
@@ -73,62 +106,13 @@ INTERFACE_CONFIG = {
     }
 }
 
-# Personnalisation avancée de l'interface
-class CustomWebInterface:
-    """
-    Extension de l'interface web ADK standard.
-    Code complet : agriculture/interface/web_custom.py
-    """
 
-    def __init__(self):
-        self.base_interface = adk.WebInterface(INTERFACE_CONFIG)
-        self._add_custom_components()
-
-    def _add_custom_components(self):
-        """Ajoute des composants spécifiques à l'agriculture."""
-        # Widget météo en temps réel
-        self.base_interface.add_widget(
-            WeatherWidget(position="top-right")
-        )
-
-        # Calendrier agricole interactif
-        self.base_interface.add_widget(
-            AgriculturalCalendarWidget(position="sidebar")
-        )
-
-        # Alertes et notifications
-        self.base_interface.add_widget(
-            AlertSystemWidget(
-                types=["weather", "disease", "market"],
-                position="top-banner"
-            )
-        )
-
-    def render_response(self, response: str, metadata: Dict) -> str:
-        """
-        Personnalise le rendu des réponses.
-
-        Ajoute :
-        - Formatage spécial pour tableaux de données
-        - Graphiques pour données numériques
-        - Cartes pour informations géolocalisées
-        - Icônes contextuelles
-        """
-        # Détection du type de contenu
-        if "tableau" in response or "|" in response:
-            return self._render_as_table(response)
-        elif any(word in response for word in ["prix", "coût", "FCFA"]):
-            return self._render_with_charts(response, metadata)
-        elif "carte" in metadata.get("display_hints", []):
-            return self._render_with_map(response, metadata)
-        else:
-            return self._render_standard(response)
 \end{lstlisting}
 \end{figure}
 
 L'interface web intègre des fonctionnalités avancées spécifiquement conçues pour le contexte agricole camerounais. La \textbf{saisie vocale} permet aux agriculteurs ayant une alphabétisation limitée d'interagir naturellement avec le système. L'\textbf{upload d'images} facilite le diagnostic visuel des maladies et ravageurs. Le \textbf{mode sombre automatique} s'adapte aux conditions d'utilisation en extérieur.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -158,7 +142,7 @@ L'interface web intègre des fonctionnalités avancées spécifiquement conçues
 
 Au-delà de l'interface web, ADK expose automatiquement une API REST complète permettant l'intégration du système Agriculture Cameroun dans d'autres applications et services.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Points d'entrée de l'API REST]
 # Configuration de l'API REST
@@ -283,7 +267,7 @@ async def setup_weather_webhook(
 
 L'API REST suit les standards RESTful modernes avec documentation automatique via Swagger/OpenAPI. Chaque endpoint est optimisé pour des cas d'usage spécifiques, permettant une intégration flexible dans différents contextes.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -309,7 +293,7 @@ Accès : \texttt{http://localhost:8000/api/docs}\\[5pt]
 
 Pour illustrer concrètement l'utilisation du système, examinons plusieurs scénarios réels d'interaction avec l'interface.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -329,11 +313,10 @@ Pour illustrer concrètement l'utilisation du système, examinons plusieurs scé
 \caption{Exemple de planification de nouvelle culture}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=JavaScript, caption=Intégration JavaScript de l'API]
 // Exemple d'intégration dans une application mobile
-// Code complet : examples/mobile_integration.js
 
 class AgricultureCamerounClient {
     constructor(apiKey) {
@@ -430,7 +413,7 @@ await agriClient.subscribeToAlerts('Ouest', [
 \end{lstlisting}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -457,7 +440,7 @@ await agriClient.subscribeToAlerts('Ouest', [
 
 La stratégie de test du système Agriculture Cameroun assure la fiabilité et la précision des conseils fournis aux agriculteurs. Chaque agent dispose de sa propre suite de tests couvrant ses fonctionnalités spécifiques.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Framework de tests unitaires pour agents ADK]
 # Structure de tests dans tests/unit/test_agents.py
@@ -661,7 +644,7 @@ Les tests unitaires couvrent non seulement la fonctionnalité correcte mais auss
 
 Les tests d'intégration vérifient que les différents composants du système fonctionnent harmonieusement ensemble, particulièrement important pour un système multi-agents où la coordination est cruciale.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Suite de tests d'intégration]
 # Tests d'intégration dans tests/integration/test_system.py
@@ -840,7 +823,7 @@ class TestDataValidation:
 
 Les scénarios de test complets simulent des cas d'usage réels pour valider que le système répond correctement aux besoins des agriculteurs camerounais.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -875,7 +858,7 @@ Les scénarios de test complets simulent des cas d'usage réels pour valider que
 
 Le déploiement local du système Agriculture Cameroun est conçu pour être simple et rapide, permettant aux développeurs et testeurs de démarrer immédiatement.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=bash, caption=Script de déploiement local automatisé]
 #!/bin/bash
@@ -1025,7 +1008,7 @@ Le déploiement local inclut des \textbf{outils de développement avancés} comm
 
 La containerisation Docker assure une portabilité parfaite et simplifie grandement le déploiement en production.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Dockerfile, caption=Docker optimisé pour Agriculture Cameroun]
 # Dockerfile multi-stage pour optimisation
@@ -1091,7 +1074,7 @@ CMD ["adk", "web", "--host", "0.0.0.0", "--port", "8000"]
 \end{lstlisting}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=yaml, caption=Docker Compose pour environnement complet]
 # docker-compose.yml
@@ -1201,7 +1184,7 @@ La configuration Docker Compose fournit un environnement de production complet a
 
 Le déploiement en production nécessite des considérations supplémentaires pour assurer la fiabilité, la sécurité et la scalabilité du système.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -1226,7 +1209,7 @@ Le déploiement en production nécessite des considérations supplémentaires po
 \caption{Architecture de déploiement production}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=bash, caption=Script de déploiement production (GCP)]
 #!/bin/bash
@@ -1283,7 +1266,7 @@ echo "�� URL: https://agriculture-cameroun.cm"
 
 Le déploiement en production intègre des \textbf{bonnes pratiques DevOps} essentielles incluant l'infrastructure as code (Terraform), CI/CD automatisé (GitHub Actions), stratégies de rollback automatique, tests de charge et monitoring, sauvegardes automatiques et plans de disaster recovery.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{

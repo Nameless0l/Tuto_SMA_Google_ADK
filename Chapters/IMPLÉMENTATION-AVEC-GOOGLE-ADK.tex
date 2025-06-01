@@ -7,7 +7,7 @@
 
 La création d'un agent avec Google ADK représente un changement de paradigme par rapport aux frameworks traditionnels. Au lieu de programmer explicitement chaque comportement, nous définissons les capacités et objectifs de l'agent, laissant le modèle de langage générer les comportements appropriés. Commençons par créer un agent météorologique simple pour illustrer les concepts fondamentaux.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Agent météorologique simple avec ADK]
 # weather_agent_simple.py
@@ -77,7 +77,7 @@ Les \textbf{outils (tools)} représentent l'interface entre l'agent et le monde 
 
 Le cycle de vie d'un agent ADK diffère significativement des agents traditionnels, intégrant de manière transparente les capacités des modèles de langage dans chaque phase d'exécution.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -101,7 +101,7 @@ Durant la phase d'\textbf{initialisation}, l'agent charge ses instructions et co
 
 La phase de \textbf{réception et analyse} exploite pleinement les capacités de compréhension du langage naturel de Gemini. L'agent n'a pas besoin de parser explicitement la requête ou de la faire correspondre à des patterns prédéfinis. Le modèle comprend l'intention, le contexte et les nuances de la requête, permettant une interaction beaucoup plus naturelle et flexible.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Gestion du cycle de vie avec états persistants]
 class StatefulWeatherAgent:
@@ -173,7 +173,7 @@ L'\textbf{exécution} des outils se fait de manière transparente. ADK gère aut
 
 Dans ADK, les comportements ne sont pas programmés explicitement mais émergent de la combinaison des instructions, du contexte et des capacités du modèle. Cette approche offre une flexibilité sans précédent tout en maintenant un contrôle sur les actions de l'agent.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Comportements adaptatifs avec ADK]
 # Configuration d'un agent avec comportements multiples
@@ -277,7 +277,7 @@ La \textbf{composition de comportements} permet de créer des agents sophistiqu�
 
 Le système de prompts constitue l'âme d'un agent ADK, définissant sa personnalité, ses connaissances et ses patterns de comportement. La maîtrise de l'ingénierie des prompts est essentielle pour créer des agents efficaces et fiables.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Structure avancée des prompts]
 class PromptTemplates:
@@ -427,7 +427,7 @@ La \textbf{gestion de la cohérence} à travers les prompts assure que l'agent m
 
 La communication inter-agents dans ADK représente une évolution majeure par rapport aux protocoles rigides des systèmes traditionnels. Au lieu de messages ACL structurés, ADK permet une communication flexible combinant structure et langage naturel, facilitant des interactions plus riches et nuancées entre agents.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Architecture de communication inter-agents]
 from typing import Optional, Dict, Any
@@ -629,7 +629,7 @@ La \textbf{gestion asynchrone} des messages permet aux agents de traiter les req
 
 Les outils dans ADK représentent le pont entre l'intelligence linguistique des agents et les actions concrètes dans le monde réel. Leur implémentation correcte est cruciale pour créer des agents véritablement utiles.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Implémentation d'outils spécialisés pour l'agriculture]
 from typing import List, Dict, Optional, Tuple
@@ -1127,7 +1127,7 @@ La \textbf{conception des outils} suit des principes importants pour maximiser l
 
 Le passage efficace du contexte entre agents est crucial pour maintenir la cohérence des interactions et permettre une collaboration sophistiquée dans la résolution de problèmes complexes.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Système de gestion du contexte inter-agents]
 from dataclasses import dataclass, field
@@ -1502,7 +1502,7 @@ L'\textbf{enrichissement contextuel} adapte dynamiquement le contexte selon les 
 
 Pour illustrer concrètement la communication inter-agents, examinons des exemples réels de messages échangés dans différents scénarios d'utilisation du système Agriculture Cameroun.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Exemples de communications inter-agents en action]
 # Scénario 1: Planification de culture avec conditions météo
@@ -1932,7 +1932,7 @@ La \textbf{nature asynchrone} de la communication permet aux agents de traiter l
 
 L'agent principal constitue le cœur du système Agriculture Cameroun, orchestrant l'ensemble des interactions et assurant la cohérence des réponses. Sa structure reflète cette responsabilité centrale tout en maintenant la modularité nécessaire pour l'évolution du système.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Structure complète de l'agent principal]
 # agent.py - Agent Coordinateur Principal du Système Agriculture Cameroun
@@ -2341,7 +2341,7 @@ def process_agricultural_query(
 
 La configuration de l'agent principal suit une approche modulaire permettant une personnalisation facile selon les besoins spécifiques. Le fichier \texttt{config.py} centralise toutes les constantes et paramètres configurables du système.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -2366,7 +2366,7 @@ L'initialisation du système suit une séquence précise garantissant que tous l
 
 Le mécanisme de routage constitue l'intelligence centrale du coordinateur, déterminant quels agents consulter pour chaque requête. Cette décision s'appuie sur l'analyse sémantique de la requête par Gemini, permettant une compréhension nuancée des besoins de l'utilisateur.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Logique de routage intelligente (extrait)]
 # Extrait de tools.py montrant le pattern de routage
@@ -2408,7 +2408,7 @@ def route_to_weather_agent(query: str, agent: Agent) -> Dict[str, Any]:
 
 Pour une compréhension approfondie du code de l'agent principal, consultez le fichier source complet sur GitHub avec ses annotations détaillées :
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -2440,7 +2440,7 @@ L'Agent Météorologique fournit des informations climatiques essentielles pour 
 
 \subsubsection{Structure et outils}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -2468,7 +2468,7 @@ L'agent utilise plusieurs outils spécialisés pour collecter et analyser les do
 
 L'agent intègre plusieurs sources de données pour fournir des informations fiables et précises. Le système utilise une approche de fusion de données combinant sources globales et locales quand disponibles.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Pattern d'intégration météo (exemple simplifié)]
 # Extrait conceptuel de sub_agents/weather/tools.py
@@ -2507,7 +2507,7 @@ class WeatherDataIntegration:
 
 L'agent météorologique excelle dans la fourniture d'informations contextualisées pour l'agriculture. Voici des exemples typiques d'interactions :
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -2538,7 +2538,7 @@ L'Agent Cultures apporte l'expertise agronomique au système, conseillant sur to
 
 \subsubsection{Base de connaissances agricoles}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -2567,7 +2567,7 @@ La base de connaissances est structurée de manière hiérarchique, permettant �
 
 L'agent génère des recommandations en croisant multiple facteurs : localisation, type de sol, ressources disponibles, objectifs de l'agriculteur et conditions actuelles. Cette approche holistique assure des conseils pratiques et réalisables.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Système de recommandation (concept)]
 # Pattern de recommandation dans sub_agents/crops/agent.py
@@ -2590,7 +2590,6 @@ Le système de recommandation utilise :
    - Préférences culturales
    - Contraintes spécifiques
 
-Code complet : sub_agents/crops/tools.py
 Fonction : generate_personalized_recommendations()
 """
 \end{lstlisting}
@@ -2602,7 +2601,7 @@ L'Agent Santé des Plantes agit comme phytopathologiste virtuel, diagnostiquant 
 
 \subsubsection{Diagnostic et traitement}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -2629,7 +2628,7 @@ L'Agent Santé des Plantes agit comme phytopathologiste virtuel, diagnostiquant 
 
 L'agent intègre un système expert utilisant des règles de décision basées sur l'expertise phytosanitaire locale. Ce système combine l'approche traditionnelle des systèmes experts avec la flexibilité des LLM.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Intégration système expert (principe)]
 # Concept d'intégration dans sub_agents/health/expert_system.py
@@ -2647,8 +2646,7 @@ IF symptômes = ["taches brunes", "pourriture cabosses"]
    AND humidité > 80\%
 THEN maladie = "pourriture brune" (confiance: 0.85)
 
-Code complet avec 100+ règles :
-sub_agents/health/expert_rules.py
+
 """
 \end{lstlisting}
 \end{figure}
@@ -2659,7 +2657,7 @@ L'Agent Économique fournit l'intelligence commerciale nécessaire pour transfor
 
 \subsubsection{Analyse de marché}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -2686,7 +2684,7 @@ L'Agent Économique fournit l'intelligence commerciale nécessaire pour transfor
 
 L'agent effectue des analyses financières complètes adaptées au contexte des petits agriculteurs camerounais. Les calculs prennent en compte les spécificités locales comme le travail familial, les systèmes d'entraide et les coûts cachés.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Modèle de calcul économique (aperçu)]
 # Structure dans sub_agents/economic/financial_models.py
@@ -2722,7 +2720,7 @@ L'Agent Ressources optimise l'utilisation des ressources naturelles et des intra
 
 \subsubsection{Gestion des ressources}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \framebox[0.9\textwidth]{
 \parbox{0.85\textwidth}{
@@ -2749,7 +2747,7 @@ L'Agent Ressources optimise l'utilisation des ressources naturelles et des intra
 
 L'agent génère des plans d'optimisation personnalisés considérant les contraintes et opportunités spécifiques de chaque exploitation.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{lstlisting}[language=Python, caption=Exemple de recommandation intégrée]
 # Pattern de recommandation dans sub_agents/resources/optimizer.py

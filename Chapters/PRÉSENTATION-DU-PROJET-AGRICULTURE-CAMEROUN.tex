@@ -162,24 +162,27 @@ L'Agent Coordinateur implémente également des \emph{mécanismes d'apprentissag
 
 \subsection{Diagramme d'architecture (avec annotations)}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-% \includegraphics[width=0.9\textwidth]{images/architecture_diagram.png}
+\includegraphics[width=0.9\textwidth]{images/architectures.png}
 \caption{Architecture multi-agents du système Agriculture Cameroun avec flux de communication}
 \label{fig:architecture}
 \end{figure}
 
-Le diagramme d'architecture présenté dans la Figure \ref{fig:architecture} illustre l'organisation hiérarchique et les flux d'information du système Agriculture Cameroun. Au sommet de l'architecture, l'interface utilisateur en langage naturel représente le point d'entrée unique pour tous les utilisateurs, symbolisant l'accessibilité et la simplicité d'utilisation du système. Cette interface, représentée par une icône de dialogue, traduit les requêtes verbales ou textuelles en formats structurés compréhensibles par le système.
+Le diagramme d'architecture présenté dans la Figure \ref{fig:architecture} illustre l'organisation hiérarchique du système Agriculture Cameroun selon une structure en arbre descendant. Au sommet, l'Agriculteur (👨‍🌾) représente l'utilisateur final du système, point d'entrée unique pour toutes les interactions. Cette représentation souligne l'approche centrée utilisateur du système, conçu spécifiquement pour les producteurs agricoles camerounais.
 
-L'Agent Coordinateur Principal, positionné au centre du diagramme et représenté par un hub neural, illustre son rôle de cerveau central du système. Les connexions bidirectionnelles vers tous les autres composants soulignent sa fonction d'orchestrateur. Les flèches entrantes (en bleu) représentent les requêtes décomposées envoyées aux agents spécialisés, tandis que les flèches sortantes (en vert) symbolisent les réponses agrégées retournées à l'interface utilisateur.
+L'Interface Web (🌐) constitue la couche de présentation, offrant une interface intuitive et accessible via navigateur web. Cette interface traduit les requêtes utilisateur en formats structurés et présente les réponses des agents de manière claire et actionnable. Son positionnement direct sous l'utilisateur illustre son rôle de pont entre l'humain et le système multi-agents.
 
-Les cinq agents spécialisés sont disposés en arc de cercle autour de l'Agent Coordinateur, chacun identifié par une icône distinctive reflétant son domaine d'expertise. L'Agent Météorologique (nuage et soleil) est connecté à des sources de données externes représentées par des satellites et stations météo. L'Agent Cultures (plant en croissance) maintient des liens avec une base de données de variétés et de pratiques culturales. L'Agent Santé des Plantes (microscope et feuille) est associé à une base de données phytosanitaire illustrée. L'Agent Économique (graphique et pièces) se connecte aux flux de données de marché en temps réel. L'Agent Ressources (goutte d'eau et sol) interagit avec des bases de données pédologiques et hydrologiques.
+L'Agent Principal Coordinateur (🤖) occupe une position centrale stratégique dans l'architecture. Représenté par l'icône robot avec le sous-titre "Coordinateur", il incarne le cerveau du système, responsable de l'orchestration de tous les agents spécialisés. Les connexions directes descendantes vers les cinq agents spécialisés illustrent sa capacité de routage intelligent et de coordination des requêtes complexes.
 
-Les connexions inter-agents, représentées par des lignes pointillées orange, illustrent les capacités de communication directe entre agents spécialisés. Ces connexions permettent des consultations croisées sans passer par l'Agent Coordinateur, optimisant ainsi les performances pour les requêtes nécessitant une collaboration étroite entre domaines connexes.
+Les cinq agents spécialisés sont organisés horizontalement sous l'Agent Principal, chacun identifié par une icône métier distinctive. L'Agent Météorologique (🌤️) gère les prévisions et analyses climatiques. L'Agent Cultures (🌱) traite les questions liées aux variétés, plantations et cycles agricoles. L'Agent Santé des Plantes (🔬) se spécialise dans le diagnostic et le traitement des maladies. L'Agent Économique (💰) analyse la rentabilité et les tendances de marché. L'Agent Ressources (💧) optimise la gestion de l'eau, du sol et des intrants.
 
-La couche inférieure du diagramme présente l'infrastructure de données et de services, visualisée comme un ensemble de cylindres de données interconnectés. Cette couche inclut les bases de données locales (en vert foncé) contenant les informations spécifiques au Cameroun, les connexions aux services externes (en bleu clair) pour les données en temps réel, et les systèmes de cache et de persistance (en gris) assurant les performances et la continuité du service.
+La couche externe du diagramme présente l'écosystème de données et services. Chaque agent spécialisé maintient des connexions dédiées vers ses sources d'information : l'Agent Météorologique se connecte à l'OpenWeather API (🌡️), l'Agent Économique aux Market Data API (📈), tandis que les autres agents accèdent à des bases de données spécialisées représentées par des cylindres : Base Maladies (🌿), Base Cultures (🌾), et Soil Data API (🌍).
 
-Les annotations de sécurité et de performance, représentées par des boucliers et des jauges, sont stratégiquement placées aux points critiques de l'architecture. Ces éléments soulignent l'attention portée à la protection des données des agriculteurs et à l'optimisation des temps de réponse, essentiels pour un système destiné à des utilisateurs souvent en zones rurales avec une connectivité limitée.
+L'intégration du LLM Gemini (🧠) constitue un élément architectural innovant. Connecté à l'Agent Principal et aux cinq agents spécialisés, Gemini enrichit le système de capacités de traitement du langage naturel et de raisonnement avancé, permettant des analyses contextuelles sophistiquées et des réponses en langage naturel.
+
+Les flux de communication inter-agents, représentés par des lignes pointillées annotées, illustrent la capacité de collaboration directe entre agents. Les connexions "Coordination" et "Synthèse" depuis l'Agent Principal, ainsi que les échanges "Données croisées", "Prévisions" et "Prix/Coûts" entre agents spécialisés, démontrent l'intelligence distribuée du système et sa capacité d'optimisation collaborative.
+
 
 \section{Scénarios d'Interaction}
 
@@ -249,9 +252,9 @@ L'Agent Coordinateur Principal présente ces résultats sous forme de tableaux c
 
 \subsection{Diagrammes de séquence annotés}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-% \includegraphics[width=0.95\textwidth]{images/sequence_diagram_weather.png}
+\includegraphics[width=0.95\textwidth]{images/sequence_diagram_weather.png}
 \caption{Diagramme de séquence pour une consultation météorologique complexe}
 \label{fig:sequence_weather}
 \end{figure}
@@ -266,9 +269,9 @@ Les annotations sur les flèches de retour indiquent le type et le contenu des r
 
 La phase de synthèse est représentée par une boîte d'activation étendue sur l'Agent Coordinateur, illustrant le processus complexe d'intégration et d'harmonisation des différentes réponses. Les conflits potentiels et leur résolution sont annotés, montrant par exemple comment une recommandation de récolte précoce de l'Agent Cultures est pondérée par l'analyse de prix de l'Agent Économique.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-% \includegraphics[width=0.95\textwidth]{images/sequence_diagram_disease.png}
+\includegraphics[width=0.95\textwidth]{images/sequence_diagram_disease.png}
 \caption{Diagramme de séquence pour un diagnostic de maladie avec apprentissage}
 \label{fig:sequence_disease}
 \end{figure}
@@ -281,9 +284,9 @@ Les consultations croisées entre agents sont mises en évidence par des flèche
 
 Le mécanisme d'apprentissage est représenté par des flèches en retour vers une base de connaissances (cylindre de données). Après confirmation du diagnostic par l'utilisateur, le système met à jour ses modèles pour améliorer les futures diagnostics similaires. Cette rétroaction est annotée comme "Apprentissage confirmé" avec les paramètres mis à jour.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-% \includegraphics[width=0.95\textwidth]{images/sequence_diagram_economic.png}
+\includegraphics[width=1\textwidth]{images/sequence_diagram_economic.png}
 \caption{Diagramme de séquence pour une analyse économique multi-critères}
 \label{fig:sequence_economic}
 \end{figure}
